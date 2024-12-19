@@ -1,3 +1,4 @@
 test01
 git pull
 local modify test01.txt
+A
