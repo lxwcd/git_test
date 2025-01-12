@@ -4,3 +4,4 @@ local modify test01.txt
 A
 b
 C
+001

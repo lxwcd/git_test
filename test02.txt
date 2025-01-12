@@ -1,2 +1,3 @@
 test02
-local git rebase
+local git rebase002
+002
