@@ -1,0 +1,23 @@
+From 9aaa1c654b076de24c529ce46d3c4d95211a2871 Mon Sep 17 00:00:00 2001
+From: lxwcd <15521168075@163.com>
+Date: Thu, 19 Dec 2024 21:43:41 +0800
+Subject: [PATCH 1/2] fix B
+
+---
+ test01.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/test01.txt b/test01.txt
+index 5c232c3..cd7fb11 100644
+--- a/test01.txt
++++ b/test01.txt
+@@ -2,5 +2,5 @@ test01
+ git pull
+ local modify test01.txt
+ A
+-B
++b
+ C
+-- 
+2.47.1.windows.1
+

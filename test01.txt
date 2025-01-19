@@ -1,7 +1,28 @@
-test01
-git pull
-local modify test01.txt
+testr1
+gat pull
+local modify tes ilsdfsdffst01.txt
+
+
+
+
 A
 b
-C
+a   sdsdfda
 001
+1
+
+
+
+
+isdj
+
+
+
+
+
+
+
+
+
+
+da

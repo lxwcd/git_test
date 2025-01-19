@@ -1,0 +1,41 @@
+From 51da54a57cdc95263072173726d187a544725289 Mon Sep 17 00:00:00 2001
+From: lxwcd <15521168075@163.com>
+Date: Sun, 12 Jan 2025 21:22:45 +0800
+Subject: [PATCH] update fix_B
+
+---
+ test01.txt | 1 +
+ test02.txt | 3 ++-
+ test05.txt | 1 +
+ 3 files changed, 4 insertions(+), 1 deletion(-)
+ create mode 100644 test05.txt
+
+diff --git a/test01.txt b/test01.txt
+index cd7fb11..a821b44 100644
+--- a/test01.txt
++++ b/test01.txt
+@@ -4,3 +4,4 @@ local modify test01.txt
+ A
+ b
+ C
++001
+diff --git a/test02.txt b/test02.txt
+index 8de02e1..98bbcac 100644
+--- a/test02.txt
++++ b/test02.txt
+@@ -1,2 +1,3 @@
+ test02
+-local git rebase
+\ No newline at end of file
++local git rebase002
++002
+diff --git a/test05.txt b/test05.txt
+new file mode 100644
+index 0000000..7ed6ff8
+--- /dev/null
++++ b/test05.txt
+@@ -0,0 +1 @@
++5
+-- 
+2.47.1.windows.1
+

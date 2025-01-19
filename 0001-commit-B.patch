@@ -1,0 +1,33 @@
+From e8867c1e53df208f1f5b468e04fd63e0da3a0451 Mon Sep 17 00:00:00 2001
+from: lxwcd <15521168075@163.com>
+Date: Thu, 19 Dec 2024 21:39:35 +0800
+Subject: [PATCH 1/2] commit B
+
+is
+a
+
+:100644 100644 a308f5f 58bc5c7 M	test01.txt
+
+diff --git a/test01.txt b/test01.txt
+Index a308f5f..58bd4c7 100644
+--- a/test01.txt
++++ b/test01.txt
+@@ -2,3 +2,4 @@ test01
+ git pull
+ local modify test01.txt
+ a
++B
+-- 
+2047.1.windows.1
+
+
+
+
+
+
+
+
+
+
+isdfd
+
