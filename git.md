@@ -127,4 +127,1005 @@ git log
 ```bash
 git log <branch-name>
 ```
+
 这个命令显示指定分支的提交历史。
+
+# git log 查看日志
+
+## 查看当前分支所有提交
+```bash
+git log
+```
+默认按照时间顺序，从最新的开始显示。
+
+## 查看特定分支的提交
+```bash
+git log <branch-name>
+```
+这个命令显示指定分支的提交历史。
+
+## 指定输出日志数目
+```bash
+git log -3
+```
+输出日志显示最新的 3 条
+
+## 查看提交差异 --patch
+
+使用`-p`或`--patch`参数，可以查看每个提交的具体差异：
+```bash
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ git log -p -1
+commit 51da54a57cdc95263072173726d187a544725289 (HEAD -> fix_B)
+Author: lxwcd <15521168075@163.com>
+Date:   Sun Jan 12 21:22:45 2025 +0800
+
+    update fix_B
+
+diff --git a/test01.txt b/test01.txt
+index cd7fb11..a821b44 100644
+--- a/test01.txt
++++ b/test01.txt
+@@ -4,3 +4,4 @@ local modify test01.txt
+ A
+ b
+ C
++001
+diff --git a/test02.txt b/test02.txt
+index 8de02e1..98bbcac 100644
+--- a/test02.txt
++++ b/test02.txt
+@@ -1,2 +1,3 @@
+ test02
+-local git rebase
+\ No newline at end of file
++local git rebase002
++002
+diff --git a/test05.txt b/test05.txt
+new file mode 100644
+index 0000000..7ed6ff8
+--- /dev/null
++++ b/test05.txt
+@@ -0,0 +1 @@
++5
+```
+
+这将显示最新两个提交的详细差异，包括文件的增删改。
+其中 a 表示该提交前的版本，b 表示该提交后的版本。
+`@@` 标记差异的开始，如 `@@ -4,3 +4,4 @@ local modify test01.txt` 表示对于 a 版本从第 4 行开始的 3 行内容，对于 b 版本从第 4 行开始的 4 行内容，有差异。
+`-` 表示原始版本中存在但新版本被删除的行，`+` 表示原始版本没有 ，新版本添加的行，即状态表示从 a 版本到 b 版本需要进行的添加、删除等操作。
+
+## 统计信息 --stat
+
+```bash
+$ git log -1 --stat
+commit 740e65b2fd98f0b99f3bcfd8dc8e1b8ad8bb6a3f (HEAD -> feature)
+Author: lxw <15521168075@163.com>
+Date:   Thu Jan 9 13:09:24 2025
+
+    modify test.md
+
+ demo/test.md | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+```
+这将显示每个提交修改的文件列表、文件数量变化以及添加和删除的行数统计。
+
+## 简短 stat 信息
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ git log --shortstat -1
+commit 51da54a57cdc95263072173726d187a544725289 (HEAD -> fix_B)
+Author: lxwcd <15521168075@163.com>
+Date:   Sun Jan 12 21:22:45 2025 +0800
+
+    update fix_B
+
+ 3 files changed, 4 insertions(+), 1 deletion(-)
+```
+
+## 自定义格式 --pretty
+使用`--pretty`参数，可以自定义日志的显示格式。
+
+### 哈希值 - 作者，相对日期 : message
+```bash
+$ git log --pretty=format:"%h - %an, %ar : %s"
+```
+```bash
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ git log --pretty=format:"%h - %an, %ar : %s" -1
+51da54a - lxwcd, 7 days ago : update fix_B
+```
+
+### 哈希值 - 作者，绝对日期 : message
+```bash
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ git log --pretty=format:"%h - %an, %ad : %s" -1
+51da54a - lxwcd, Sun Jan 12 21:22:45 2025 +0800 : update fix_B
+```
+
+## ASCII 图形显示历史 --graph
+
+官方示例：
+```bash
+$ git log --pretty=format:"%h %s" --graph
+* 2d3acf9 Ignore errors from SIGCHLD on trap
+*  5e3ee11 Merge branch 'master' of https://github.com/dustin/grit.git
+|\
+| * 420eac9 Add method for getting the current branch
+* | 30e367c Timeout code and tests
+* | 5a09431 Add timeout protection to grit
+* | e1193f8 Support for heads with slashes in them
+|/
+* d6016bc Require time for xmlschema
+*  11d191e Merge branch 'defunkt' into local
+```
+
+## 时间限制
+> [Git - Viewing the Commit History](https://git-scm.com/book/en/v2/Git-Basics-Viewing-the-Commit-History#pretty_format) 
+
+`--since`和`--until`参数可以用来限制显示特定时间范围内的提交：
+
+```bash
+$ git log --since="2 weeks ago"
+```
+
+### 绝对时间
+```bash
+git log --since="2024-12-01" --until="2024-12-31"
+git log --since="2024-12-01 00:00:00" --until="2024-12-31 23:59:59"
+```
+
+### 相对时间
+
+```bash
+git log --since="1 week ago"
+git log --until="yesterday"
+git log --since="2 days ago"
+git log --since="1 hour ago"
+git log --since="1 minute ago"
+git log --since="2 weeks ago" --until="1 week ago"
+git log --since="yesterday" --until="today"
+```
+
+## 作者和关键词搜索
+
+`--author`和`--grep`参数可以用来根据作者或提交信息中的关键词来过滤提交：
+
+```bash
+$ git log --author="Scott Chacon" --grep="version"
+```
+
+这将显示所有作者为“Scott Chacon”且提交信息中包含“version”的提交。
+
+## 文件路径过滤
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ git log --oneline  -- test02.txt
+51da54a (HEAD -> fix_B) update fix_B
+b3852e1 (origin/branch01) local git rebase  test test02.txt
+e67a0f3 add test02.txt and test03.txt
+332de10 update file
+```
+
+## 查看特定内容的日志 -S
+
+```bash
+$ git log --oneline -S "function_name"
+8ef1913 local modify test01.txt
+e67a0f3 add test02.txt and test03.txt
+332de10 update file
+470dcf0 add files
+```
+
+这个命令会列出所有添加或删除了 `function_name` 这个字符串的提交。
+
+## 正则表达式筛选特定内容的日志
+
+```bash
+git log -G"frotz\(nitfol"
+```
+
+## 显示第一个父提交 --first-parent
+
+对于有多个分支的项目，如果其他分支用 `git merge` 合并到主分支，后，合并到主分支上最终会产生一个合并的提交记录，该合并的提交有两个父提交，当前分支所在的合并前的最新提交为 first parent，而另一个分支的最新提交为 second parent。
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test (main)
+$ git log --oneline --graph -15
+*   a00fc7a (HEAD -> main) Merge branch 'fix_B'
+|\
+| * 099b5e1 (fix_B) update test files' '
+| * 51da54a update fix_B
+| * 9aaa1c6 (branch01) fix B
+| * 09035ad commit C
+| * e8867c1 commit B
+| * 0b4aed3 commit A
+| * b3852e1 (origin/branch01) local git rebase  test test02.txt
+| * 8ef1913 local modify test01.txt
+| * c8d5a84 Update test01.txt  git pull
+* | 03d14ae (origin/main) update main test01.txt
+* | 737c5b7 commit B
+|/
+* e67a0f3 add test02.txt and test03.txt
+* 332de10 update file
+* 470dcf0 add files
+```
+
+如上面 `a00fc7a` 合并提交，其 first parent 为 `03d14ae`，其 second parent 为 `099b5e`。
+
+如果只显示 first parent，则只会显示 main 分支上的提提交和最终合并到 main 上的提交：
+```bash
+lx@lx MINGW64 /d/Documents/git_test (main)
+$ git log --oneline --graph --first-parent -15
+* a00fc7a (HEAD -> main) Merge branch 'fix_B'
+* 03d14ae (origin/main) update main test01.txt
+* 737c5b7 commit B
+* e67a0f3 add test02.txt and test03.txt
+* 332de10 update file
+* 470dcf0 add files
+```
+
+### 查看合并提交的多个父提交
+```bash
+lx@lx MINGW64 /d/Documents/git_test (main)
+$ git show a00fc7a --shortstat
+commit a00fc7a17f1e55dee84a79f4d16b4e88edb0ba00 (HEAD -> main)
+Merge: 03d14ae 099b5e1
+Author: lxwcd <15521168075@163.com>
+Date:   Sun Jan 19 18:34:59 2025 +0800
+
+    Merge branch 'fix_B'
+
+ 12 files changed, 322 insertions(+)
+```
+
+从 `Merge: 03d14ae 099b5e1` 可以看出，03d14ae 为 first parent, 099b5e1 为 second parent。
+
+## 排除合并信息 --no-merges
+`--no-merges` 选项用于排除合并信息。当使用 `--no-merges` 选项时，`git log` 只显示那些没有合并操作的提交。
+
+所有提交：
+```bash
+lx@lx MINGW64 /d/Documents/git_test (main)
+$ git log --oneline --graph --no-merges -15
+* 099b5e1 (fix_B) update test files' '
+* 51da54a update fix_B
+* 9aaa1c6 (branch01) fix B
+* 09035ad commit C
+* e8867c1 commit B
+* 0b4aed3 commit A
+* b3852e1 (origin/branch01) local git rebase  test test02.txt
+* 8ef1913 local modify test01.txt
+* c8d5a84 Update test01.txt  git pull
+| * 03d14ae (origin/main) update main test01.txt
+| * 737c5b7 commit B
+|/
+* e67a0f3 add test02.txt and test03.txt
+* 332de10 update file
+* 470dcf0 add files
+```
+
+排除合并后的提交：
+```bash
+lx@lx MINGW64 /d/Documents/git_test (main)
+$ git log --oneline --graph -15
+*   a00fc7a (HEAD -> main) Merge branch 'fix_B'
+|\
+| * 099b5e1 (fix_B) update test files' '
+| * 51da54a update fix_B
+| * 9aaa1c6 (branch01) fix B
+| * 09035ad commit C
+| * e8867c1 commit B
+| * 0b4aed3 commit A
+| * b3852e1 (origin/branch01) local git rebase  test test02.txt
+| * 8ef1913 local modify test01.txt
+| * c8d5a84 Update test01.txt  git pull
+* | 03d14ae (origin/main) update main test01.txt
+* | 737c5b7 commit B
+|/
+* e67a0f3 add test02.txt and test03.txt
+* 332de10 update file
+* 470dcf0 add files
+```
+
+## 查看不同分支差异
+
+```bash
+$ git log foo bar ^baz
+```
+
+上面命令查看那些可达于 foo 或 bar 分支，但不可达于 baz 的提交。即列出那些在 foo 或 bar 分支上存在，但在 baz 分支上不存在的提交。
+
+## 查看一个分支相对于另一个分支的提交差异
+
+### git log branch1..branch2
+
+```bash
+$ git log origin..HEAD --oneline
+```
+
+HEAD 当前分支最新提交相对于 origin 分支最新提交的提交记录，即 HEAD 有但 origin 没有的提交记录
+
+和下面命令功能相同：
+```bash
+$ git log HEAD ^origin --oneline
+```
+
+# git show
+
+`git show` 用于展示各种 Git 对象的详细内容，包括提交（commit）、标签（tag）和分支（branch）。
+
+## 查看当前分支最新提交的详细信息
+```bash
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ git show main --stat
+commit a00fc7a17f1e55dee84a79f4d16b4e88edb0ba00 (main)
+Merge: 03d14ae 099b5e1
+Author: lxwcd <15521168075@163.com>
+Date:   Sun Jan 19 18:34:59 2025 +0800
+
+    Merge branch 'fix_B'
+
+ .gitignore              |   1 +
+ 0001-commit-B.patch     |  33 ++++++++++++
+ 0001-fix-B.patch        |  23 +++++++++
+ 0001-update-fix_B.patch |  41 +++++++++++++++
+ 0002-commit-C.patch     |  20 ++++++++
+ 0002-update-fix_B.patch |  41 +++++++++++++++
+ 1.patch                 |   1 +
+ 2.txt                   |   1 +
+ git.md                  | 130 ++++++++++++++++++++++++++++++++++++++++++++++++
+ test01.txt              |  28 +++++++++++
+ test02.txt              |   2 +
+ test05.txt              |   1 +
+ 12 files changed, 322 insertions(+)
+```
+
+## 查看特定提交的信息
+```bash
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ git log --oneline -2
+099b5e1 (HEAD -> fix_B) update test files' '
+51da54a update fix_B
+```
+
+查看上面第二个提交的文件名的修改情况：
+```bash
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ git log --oneline -2 | cut -d" " -f1 | tail -n1 | xargs git show --name-status
+commit 51da54a57cdc95263072173726d187a544725289
+Author: lxwcd <15521168075@163.com>
+Date:   Sun Jan 12 21:22:45 2025 +0800
+
+    update fix_B
+
+M       test01.txt
+M       test02.txt
+A       test05.txt
+
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ git log --oneline -2
+099b5e1 (HEAD -> fix_B) update test files' '
+51da54a update fix_B
+```
+
+## --name-only
+仅显示提交中涉及的文件名列表。
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ git show --name-only
+commit 099b5e1194fcb305b239e1a04d1a8ddac66bdb3d (HEAD -> fix_B)
+Author: lxwcd <15521168075@163.com>
+Date:   Sun Jan 19 18:33:57 2025 +0800
+
+    update test files'
+    '
+
+.gitignore
+0001-commit-B.patch
+0001-fix-B.patch
+0001-update-fix_B.patch
+0002-commit-C.patch
+0002-update-fix_B.patch
+1.patch
+2.txt
+git.md
+test01.txt
+```
+上面显示最新提价涉及的文件名。
+
+## --name-status
+显示提交中涉及的文件名以及它们的状态（新增、修改、删除）。
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ git show --name-status
+commit 099b5e1194fcb305b239e1a04d1a8ddac66bdb3d (HEAD -> fix_B)
+Author: lxwcd <15521168075@163.com>
+Date:   Sun Jan 19 18:33:57 2025 +0800
+
+    update test files'
+    '
+
+A       .gitignore
+A       0001-commit-B.patch
+A       0001-fix-B.patch
+A       0001-update-fix_B.patch
+A       0002-commit-C.patch
+A       0002-update-fix_B.patch
+A       1.patch
+A       2.txt
+A       git.md
+M       test01.txt
+```
+
+## --stat
+显示提交的统计信息，包括每个文件的增删行数和文件状态。
+
+## --shortstat
+显示提交的简要统计信息，只包括每个文件的增删行数。
+
+## --summary
+显示提交的统计信息摘要，类似于 `--stat`，但不包括每个文件的详细信息。
+
+## --patch
+显示提交的差异（默认选项），展示具体的代码变化。
+
+# git diff 查看文件差异
+
+## 选项
+
+`git diff` 的输出格式通常包括：
+
+- **差异标记**：`+` 表示新增的行，`-` 表示删除的行。
+- **文件名**：显示发生差异的文件名。
+- **行号**：显示差异行的行号。
+- **差异内容**：显示具体的差异内容。
+
+差异内容显示从 a 版本到 b 版本需要做的修改。
+
+## 比较工作区和暂存区的差异
+
+```bash
+git diff
+```
+这个命令显示自上次提交以来**未暂存**的更改。
+不包括没有被跟踪的文件。
+如果文件已暂存，不会查看到。
+
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
+$ git diff
+warning: in the working copy of 'test01.txt', LF will be replaced by CRLF the next time Git touches it
+diff --git a/test01.txt b/test01.txt
+index cd7fb11..a821b44 100644
+--- a/test01.txt
++++ b/test01.txt
+@@ -4,3 +4,4 @@ local modify test01.txt
+ A
+ b
+ C
++001
+```
+
+- a 最新提交版本
+- b 表示当前工作目录未暂存的版本
+- `100644` 中 `100` 表示文件类型为普通文件，`644` 表示文件权限，可以通过 `ll` 查看：
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
+$ ll test01.txt
+-rw-r--r-- 1 lx 197121 56 12月 21 22:10 test01.txt
+```
+- `@@ -4,3 +4,4 @@ local modify test01.txt` 
+a 版本的修改从第 4 行开始，共 3 行
+b 版本的修改为第 4 行开始，共 4 行
+- `001` 表示 a 版本需要增加改行才能和 b 版本一致
+
+## 比较已暂存的文件和最新提交的差异
+```bash
+git diff --cached
+```
+或者
+```bash
+git diff --staged
+```
+这些命令显示已暂存的更改与上次提交的差异。
+不会查看到没有暂存的文件差异。
+
+将工作目录的修改 add 到暂存区后，查看：
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
+$ git status
+On branch fix_B
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        modified:   test01.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        test05.txt
+
+
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
+$ git diff
+
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
+$ git diff --cached
+diff --git a/test01.txt b/test01.txt
+index cd7fb11..a821b44 100644
+--- a/test01.txt
++++ b/test01.txt
+@@ -4,3 +4,4 @@ local modify test01.txt
+ A
+ b
+ C
++001
+```
+a 表示最新的提交版本
+b 表示暂存区的版本
+
+## 比较工作区和最新提交的差异
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
+$ git diff HEAD
+warning: in the working copy of 'test02.txt', LF will be replaced by CRLF the next time Git touches it
+diff --git a/test01.txt b/test01.txt
+index cd7fb11..a821b44 100644
+--- a/test01.txt
++++ b/test01.txt
+@@ -4,3 +4,4 @@ local modify test01.txt
+ A
+ b
+ C
++001
+diff --git a/test02.txt b/test02.txt
+index 8de02e1..98bbcac 100644
+--- a/test02.txt
++++ b/test02.txt
+@@ -1,2 +1,3 @@
+ test02
+-local git rebase
+\ No newline at end of file
++local git rebase002
++002
+```
+
+工作区中跟踪的文件，已暂存和未暂存的文件和最新提交的差异都能看到。
+a 表示最新的提交版本
+b 表示工作目录的版本
+
+## 比较当前工作目录中特定文件和最新提交的差异
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
+$ git diff HEAD -- test01.txt
+diff --git a/test01.txt b/test01.txt
+index cd7fb11..a821b44 100644
+--- a/test01.txt
++++ b/test01.txt
+@@ -4,3 +4,4 @@ local modify test01.txt
+ A
+ b
+ C
++001
+```
+
+a 表示最新的提交版本
+b 表示工作目录的版本
+指定查看 test01.txt 文件和 HEAD 的差异。
+
+## 比较当前工作目录和任意提交的差异
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
+$ git diff 332de10
+diff --git a/test01.txt b/test01.txt
+index 4c19859..a821b44 100644
+--- a/test01.txt
++++ b/test01.txt
+@@ -1 +1,7 @@
+ test01
++git pull
++local modify test01.txt
++A
++b
++C
++001
+```
+
+a 为指定的提交版本
+b 为当前工作目录，包括为暂存的修改，不包括未跟踪的文件
+
+## 比较当前已暂存和任意提交的差异 
+```bash
+$ git diff 332de10 --cached
+diff --git a/test01.txt b/test01.txt
+index 4c19859..a821b44 100644
+--- a/test01.txt
++++ b/test01.txt
+@@ -1 +1,7 @@
+ test01
++git pull
++local modify test01.txt
++A
++b
++C
++001
+```
+
+a 为指定的提交版本
+b 为当前工作目录已暂存的文件修改
+
+## 比较两个提交
+```bash
+git diff <commit1> <commit2>
+```
+这个命令比较两个提交之间的差异。顺序不同则结果不同。
+
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
+$ git diff 332de10 HEAD
+diff --git a/test01.txt b/test01.txt
+index 4c19859..cd7fb11 100644
+--- a/test01.txt
++++ b/test01.txt
+@@ -1 +1,6 @@
+ test01
++git pull
++local modify test01.txt
++A
++b
++C
+```
+
+a 为 332de10 提交版本
+b 为当前分支最新提交。
+
+如果调换顺序：
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
+$ git diff HEAD 332de10
+diff --git a/test01.txt b/test01.txt
+index cd7fb11..4c19859 100644
+--- a/test01.txt
++++ b/test01.txt
+@@ -1,6 +1 @@
+ test01
+-git pull
+-local modify test01.txt
+-A
+-b
+-C
+```
+
+a 为当前分支最新提交。
+b 为 332de10 提交版本
+相当于 332de10 相对于 HEAD 的变化，因此 HEAD 中增加的内容前面为 -，表示需要减去这些内容才能和 a 的版本一致。
+
+## 比较当前最新提交和上一次提交的差异
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
+$ git diff HEAD^ HEAD
+diff --git a/test01.txt b/test01.txt
+index 5c232c3..cd7fb11 100644
+--- a/test01.txt
++++ b/test01.txt
+@@ -2,5 +2,5 @@ test01
+ git pull
+ local modify test01.txt
+ A 
+-B
++b
+ C
+```
+
+a 为 HEAD^ 上一次提交版本
+b 为 HEAD 最新提交版本
+
+## 比较两个分支最新提交的差异
+
+```bash
+git diff <branch1> <branch2>
+```
+或者等价于：
+```bash
+git diff <branch1>..<branch2>
+```
+
+这个顺序则 a 为 branch1 版本，b 为 branch2。 
+查看的是两个分支的最新提交的差异。
+
+如果调换顺序，则 a 和 b 的版本也调换：
+```bash
+git diff <branch2> <branch1>
+```
+这个顺序则 a 为 branch2 版本，b 为 branch1。
+
+## 比较一个分支相对于另一个分支的差异
+
+```bash
+git diff <branch1>...<branch2>
+```
+
+这个命令显示从 `branch1` 和 `branch2` 的共同祖先到 `branch2` 的所有差异。
+即从两个分支开始分叉后，branch2 上所有的提交内容相对共同祖先的差异。
+查看差异中 a 为两个分支共同的祖先，b 为 branch2 最新提交。
+
+注意和 ```git diff <branch1>..<branch2>``` 的区别，两个点号表示两个分支最新提交的差异。
+
+## 查看差异的文件名
+```bash
+$ git diff --name-only
+```
+
+## 比较工作目录和 stash 中特定文件差别
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (main)
+$ echo "000 modify after stash test01" >> test01.txt
+
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (main)
+$ git diff stash@{0} -- test01.txt
+warning: in the working copy of 'test01.txt', LF will be replaced by CRLF the next time Git touches it
+diff --git a/test01.txt b/test01.txt
+index d494af0..86e607d 100644
+--- a/test01.txt
++++ b/test01.txt
+@@ -4,4 +4,4 @@ local modify test01.txt
+ A
+ B
+ add main test01.txt
+-stash test01.txt
++000 modify after stash test01
+```
+
+a 为 stash@{0} 的版本
+b 为当前工作目录
+
+## 比较暂存区和 stash 中特定文件差别
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (main)
+$ git diff stash@{0} --cached -- test01.txt
+diff --git a/test01.txt b/test01.txt
+index d494af0..9d86808 100644
+--- a/test01.txt
++++ b/test01.txt
+@@ -4,4 +4,3 @@ local modify test01.txt
+ A
+ B
+ add main test01.txt
+-stash test01.txt
+```
+
+a 为 stash@{0}
+b 为暂存区
+
+## 查看当前最新提交和 stash 的差异
+```bash
+git diff stash@{0} HEAD
+```
+
+a 为 stash@{0}
+b 为HEAD
+
+## 查看两个分支某个文件的差异
+```bash
+git diff <branch1> <branch2> -- <file-path>
+```
+
+要查看两个分支中某个文件夹的差异：
+```bash
+git diff <branch1> <branch2> -- <folder-path>
+```
+
+## 比较标签
+```bash
+git diff <tag1> <tag2>
+```
+这个命令比较两个标签之间的差异。
+
+## git diff 导出补丁文件
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
+$ git diff HEAD^ HEAD -- test01.txt
+diff --git a/test01.txt b/test01.txt
+index cd7fb11..a821b44 100644
+--- a/test01.txt
++++ b/test01.txt
+@@ -4,3 +4,4 @@ local modify test01.txt
+ A
+ b
+ C
++001
+
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
+$ git diff HEAD^ HEAD -- test01.txt > ../test01.patch
+```
+将一个仓库中的某个文件的最新修改生产补丁文件。
+
+在另一个仓库应用该补丁文件：
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test_02 (fix_B)
+$ cat test01.txt
+test01
+git pull
+local modify test01.txt
+A
+b
+C
+
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test_02 (fix_B)
+$ git apply ../test01.patch
+```
+# git format-patch 生成补丁文件
+
+## 生成最近一次提交的补丁文件
+
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
+$ git format-patch HEAD^
+0001-update-fix_B.patch
+```
+
+## 生成最近两次提交的补丁文件
+
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
+$ git log --oneline -2
+51da54a (HEAD -> fix_B) update fix_B
+9aaa1c6 (branch01) fix B
+```
+
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
+$ git format-patch HEAD^^
+0001-fix-B.patch
+0002-update-fix_B.patch
+```
+
+## 生成指定提交范围的补丁文件
+
+```bash
+git format-patch <start-commit>..<end-commit>
+```
+
+这条命令会生成从 `<start-commit>` 到 `<end-commit>` 之间的所有提交的补丁文件。
+例如，生成从 `abc123` 到 `def456` 之间的所有提交的补丁文件：
+但不包括 start-commit 那个提交。
+
+如果希望包括起点和终点两个提交，则如下：
+```bash
+lx@LAPTOP-VB238NKA MINGW64 /e/src_git/demo (develop)
+$ git format-patch --output-directory=../patch c433384cd^..910b59afe
+../patch/0001-modify-test01.md.patch
+../patch/0002-modify-test02.patch
+../patch/0003-modify-test03.patch
+```
+
+## 生成某个提交以来的所有补丁文件
+
+```bash
+git format-patch <commit>
+```
+
+这条命令会生成从指定提交以来的所有提交的补丁文件，但不包括指定的提交。
+
+## 生成从根到某个提交的所有补丁文件
+
+```bash
+git format-patch --root <commit>
+```
+
+这条命令会生成从仓库的根到指定提交的所有补丁文件。
+
+## 输出格式选项
+
+### 输出到标准输出
+
+```bash
+git format-patch --stdout <commit> > output.patch
+```
+
+这条命令会将补丁文件输出到标准输出，并重定向到 `output.patch` 文件中。
+
+### 以原始格式输出
+
+```bash
+git format-patch --raw <commit>
+```
+
+这条命令会以原始格式输出补丁文件，适合向非 Git 存储库应用补丁。
+
+### 按顺序编号补丁
+
+```bash
+git format-patch --numbered <commit>
+```
+
+### 使用 --subject-prefix 自定义补丁文件前缀
+
+`--subject-prefix` 选项可以自定义补丁文件名的前缀。默认前缀是 `[PATCH]`，但你可以通过这个选项更改它。
+
+**命令**：
+```bash
+git format-patch --subject-prefix="MY_PATCH" <commit>
+```
+
+这条命令会生成补丁文件，文件名前缀为 `MY_PATCH`。例如，生成的文件名可能是 `0001-MY_PATCH-commit-message.patch`。
+
+### 使用 --output-directory 自定补丁文件目录
+
+`--output-directory` 选项可以指定生成的补丁文件的保存目录。
+
+```bash
+git format-patch --subject-prefix="MY_PATCH" --output-directory=/path/to/patches --suffix=.txt HEAD^
+```
+
+这条命令会生成从 `HEAD^` 到 `HEAD` 之间的所有提交的补丁文件，文件名前缀为 `MY_PATCH`，后缀为 `.txt`，并保存到 `/path/to/patches` 目录中。生成的文件名可能是 `0001-MY_PATCH-commit-message.txt`。
+
+### 使用 --numbered-files 生成仅包含数字的文件名
+
+`--numbered-files` 选项可以生成仅包含数字的文件名，不包含提交信息。
+
+```bash
+git format-patch --numbered-files <commit>
+```
+
+这条命令会生成补丁文件，文件名仅为数字，例如 `0001.patch`、`0002.patch` 等。
+
+### 使用 --suffix 指定补丁文件后缀
+
+`--suffix` 选项可以自定义补丁文件的后缀名。默认后缀名是 `.patch`，但你可以通过这个选项更改它。
+
+```bash
+git format-patch --suffix=.txt <commit>
+```
+
+这条命令会生成补丁文件，文件名后缀为 `.txt`，例如 `0001-commit-message.txt`。
+
+# 应用补丁文件
+
+## git apply 应用补丁文件
+
+```bash
+git apply /path/to/mypatch.patch
+```
+
+这条命令会将 `mypatch.patch` 文件中的更改应用到当前工作目录中。
+如果应用成功，会看到提示信息。
+
+如果补丁文件有多个，在一个目录中，应用时不能指定目录，需要遍历里面的文件来应用：
+```bash
+for patch in ../patch/*.patch; do
+    git apply "$patch"
+done
+```
+
+## git am 应用补丁文件
+
+```bash
+git am /path/to/mypatch.patch
+```
+
+这条命令会将 `mypatch.patch` 文件作为新的提交应用到当前分支中。
+如果补丁文件应用成功，Git 会自动创建一个新的提交，其中包含补丁中的更改。
+
+# git blame 查看文件每行的最新提交信息
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ cat test02.txt
+test02
+local git rebase002
+002
+2
+```
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ git blame test02.txt
+e67a0f30 (lxwcd             2024-12-15 19:44:40 +0800 1) test02
+51da54a5 (lxwcd             2025-01-12 21:22:45 +0800 2) local git rebase002
+51da54a5 (lxwcd             2025-01-12 21:22:45 +0800 3) 002
+00000000 (Not Committed Yet 2025-01-19 20:18:25 +0800 4) 2
+```
