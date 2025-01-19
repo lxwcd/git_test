@@ -1129,3 +1129,394 @@ e67a0f30 (lxwcd             2024-12-15 19:44:40 +0800 1) test02
 51da54a5 (lxwcd             2025-01-12 21:22:45 +0800 3) 002
 00000000 (Not Committed Yet 2025-01-19 20:18:25 +0800 4) 2
 ```
+
+# git checkout
+
+`git checkout` 是 Git 中用于切换分支或检出特定版本的文件到工作目录的命令。
+
+## 切换分支
+```bash
+git checkout <branch-name>
+```
+
+如果分支已存在，则切换到该分支。
+如果分支不存在，但分支名在远程仓库存在，则创建并切换到该分支，且设置本地该分支跟踪远程对应名字的分支，相当于执行 `git checkout -b <branch-name> origin/<branch-name>`。
+
+## 创建新分支并切换
+```bash
+git checkout -b <new-branch-name>
+```
+
+## 基于远程分支创建新分支并切换
+```bash
+git checkout -b <new-branch-name> origin/<branch-name>
+```
+这个命令会创建一个新的分支，并将其设置为跟踪远程分支 `origin/<branch-name>`。
+
+## 检出特定文件到工作目录
+```bash
+git checkout <branch-name> -- <file-path>
+```
+这个命令会从 `<branch-name>` 分支检出 `<file-path>` 文件到当前工作目录，替换本地的文件。
+
+## 检出特定提交到工作目录
+```bash
+git checkout <commit-hash> -- <file-path>
+```
+这个命令会从 `<commit-hash>` 提交检出 `<file-path>` 文件到当前工作目录。
+
+## 检出特定提交到新分支
+```bash
+git checkout <commit-hash> -b <new-branch-name>
+```
+这个命令会创建一个新的分支 `<new-branch-name>` 并检出 `<commit-hash>` 提交的内容到这个新分支。
+
+## 恢复已修改但未暂存的文件
+```bash
+git checkout -- <file-path>
+```
+这个命令会将 `<file-path>` 文件恢复到最近一次提交的状态，放弃本地的修改。
+检出最新提交的相应文件替换当前工作目录的文件。
+
+# git branch
+
+## 创建分支
+```bash
+git branch <branch-name>
+```
+这个命令会创建一个新分支，但不会切换到该分支。
+
+## 列出所有本地分支
+```bash
+git branch
+```
+
+## 列出所有远程分支
+```bash
+git branch -r
+```
+
+## 列出所有本地和远程分支
+```bash
+git branch -a
+```
+
+## 显示当前分支
+```bash
+git branch --show-current
+```
+
+## 删除分支
+```bash
+git branch -d <branch-name>
+```
+这个命令会删除一个已经完全合并到当前分支的本地分支。如果分支未完全合并，Git 会阻止删除以防止数据丢失。
+
+## 强制删除分支
+```bash
+git branch -D <branch-name>
+```
+这个命令会强制删除一个分支，无论它是否已经合并。
+
+## 重命名分支
+
+```bash
+git branch -m <old-name> <new-name>
+```
+
+### 强制重命名分支
+```bash
+git branch -M <old-name> <new-name>
+```
+
+## 设置上游分支
+```bash
+git branch -u <remote-branch>
+```
+
+## 查看当前分支与上游分支的对应关系
+```bash
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ git branch -vv
+  branch01  9aaa1c6 [origin/branch01: ahead 4] fix B
+  feature01 b387cb1 [origin/tb01: ahead 2] Merge branch 'tb01' of https://github.com/lxwcd/git_test into feature01
+  feature02 f3f08ca add test04.txt
+* fix_B     f54dd26 [origin/fix_B] update 2.txt 222
+  main      a00fc7a [origin/main: ahead 10] Merge branch 'fix_B'
+  tb01      f9e71d6 [origin/tb01] Update test01.txt
+```
+
+- 显示所有分支及其上游信息
+- `*` 表示当前分支的对应关系
+- 显示与远程分支的 ahead  和 behind 的信息
+
+## 查看当前分支与上游分支的对应关系
+```bash
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ git branch -vv | grep "*"
+* fix_B     f54dd26 [origin/fix_B] update 2.txt 222
+```
+
+## 包含已合并/未合并信息
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (main)
+$ git branch
+  branch01
+  fix_B
+* main
+  tb01
+
+lx@lx MINGW64 /d/Documents/git_test03 (main)
+$ git branch --merged
+* main
+
+lx@lx MINGW64 /d/Documents/git_test03 (main)
+$ git branch --no-merged
+  branch01
+  fix_B
+  tb01
+```
+
+将 `branch01` 分支合并到 `main` 分支后查看：
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (main)
+$ git branch --merged
+  branch01
+* main
+```
+
+## 删除远程跟踪分支
+```bash
+git branch -dr <remote/branch>
+```
+这条命令会删除本地的远程跟踪分支。但并不会直接删除远程仓库中的分支，只是删除了本地对远程分支的跟踪信息。
+
+## 删除本地分支的上游分支设置
+
+```bash
+git branch --unset-upstream my-branch
+```
+
+# git switch 
+
+如果工作目录中有未被跟踪的文件，可以切换，未被跟踪的文件也会出现在切换后的分支上。
+
+## 切换到已存在的分支
+```bash
+git switch <branch-name>
+```
+
+## 创建并切换新分支
+```bash
+git switch -c <new-branch-name>
+```
+
+## 强制创建新分支
+```bash
+git switch -C <new-branch>
+```
+
+## 根据远程分支创建本地分支
+使用 `git switch --track` 命令创建一个新的本地分支，并设置它跟踪远程分支。
+
+```bash
+git switch --track origin/feature
+```
+或者使用 `-t` 选项：
+```bash
+git switch -t origin/feature
+```
+创建一个新的本地 `feature` 分支，并立即设置它跟踪远程的 `origin/feature` 分支。
+
+也可以使用下面方法：
+```bash
+git checkout -b feature origin/feature
+```
+
+## 快速切换回前一个分支
+```bash
+git switch -
+```
+
+# git add 
+
+## 暂存所有更改
+```bash
+git add .
+```
+或者
+```bash
+git add --all
+```
+
+## 使用通配符
+```bash
+git add *.cpp *.h
+```
+
+## 交互式暂存
+```bash
+git add -i
+```
+
+# git commit
+
+## 指定提交信息 -m
+```bash
+git commit -m "Commit message"
+```
+使用 `-m` 选项可以直接在命令行中指定提交信息。
+
+## 提交所有更改 -am
+```bash
+git commit -a -m
+```
+使用 `-a` 选项会自动将所有已跟踪文件的更改添加到暂存区并提交，但不包括新文件。
+
+## 修改最后一次提交 --amend
+
+提交后如果发现有内容想变更，但不想新建提交记录，则可以修改后更新最后一次提交。
+如果修改提交内容后不更新提交日志，可以加 `--no-edit` 选项。
+```bash
+git commit --amend --no-edit
+```
+
+最好在未将最后一次提交推送到远程仓库前使用这个命令修改。
+如果已经推送到远程，则修改后需要用 `git push --force` 来更新远程仓库。如果此时远程仓库有其他新的提交，将不会存在，变成和本地一样的提交记录。
+
+## 输入多行提交日志
+利用 here 字符串输入多行日志：
+```bash
+$ git commit -F - <<EOF
+> modify test.md
+> EOF
+[feature c433384cd] modify test.md
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+```
+
+# git rm 删除文件
+
+## 删除文件
+```bash
+git rm <file1> <file2> ...
+```
+
+## 删除目录
+```bash
+git rm -r <directory>
+```
+
+# git mv 移动文件
+
+## 重命名文件
+```bash
+git mv <old-name> <new-name>
+```
+
+## 移动文件
+```bash
+git mv <file> <directory>
+```
+将 `<file>` 移动到 `<directory>` 目录中。
+
+## 移动目录
+```bash
+git mv <old-directory> <new-directory>
+```
+
+# 常用案例
+## 有冲突时指定使用版本
+
+两个仓库中的一个分支都修改了文件 2.txt 的相同一行，但修改内容内容不同，一个仓库已经将修改推送到远程仓库，另一个仓库修改后提交到本地，然后 git pull 时提示有冲突：
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (fix_B)
+$ git pull
+remote: Enumerating objects: 5, done.
+remote: Counting objects: 100% (5/5), done.
+remote: Compressing objects: 100% (1/1), done.
+remote: Total 3 (delta 1), reused 3 (delta 1), pack-reused 0 (from 0)
+Unpacking objects: 100% (3/3), 239 bytes | 9.00 KiB/s, done.
+From https://github.com/lxwcd/git_test
+   15f80f2..f54dd26  fix_B      -> origin/fix_B
+Auto-merging 2.txt
+CONFLICT (content): Merge conflict in 2.txt
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+查看当前工作目录的状态，可以看见有个文件处于冲突中，待解决：
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)
+$ git status
+On branch fix_B
+Your branch and 'origin/fix_B' have diverged,
+and have 1 and 1 different commits each, respectively.
+  (use "git pull" if you want to integrate the remote branch with yours)
+
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+        both modified:   2.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+```
+
+查看冲突文件的内容：
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)
+$ cat 2.txt
+<<<<<<< HEAD
+22
+=======
+222
+>>>>>>> f54dd265ddebde6a06e2ea619a0588d2b1555945
+```
+
+`<<<<<<< HEAD` 表示下方表示当前版本
+`=======` 表示分隔符，下方内容为冲突版本的内容
+`>>>>>>> f54dd265ddebde6a06e2ea619a0588d2b1555945` 表示冲突结束位置
+
+### 使用对方版本
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)
+$ git checkout --theirs 2.txt
+Updated 1 path from the index
+
+lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)
+$ cat 2.txt
+222
+```
+
+### 使用本地版本
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)
+$ git checkout --ours 2.txt
+Updated 1 path from the index
+
+lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)
+$ cat 2.txt
+22
+```
+
+### 添加到暂存区
+选择版本后，将这些文件添加到暂存区：
+
+```bash
+git add <file-path>
+```
+
+### 继续合并
+如果你已经解决了所有文件的冲突，你可以继续完成合并操作：
+
+```bash
+git commit -m "message"
+```
+
+或者 
+```bash
+git merge --continue
+```
