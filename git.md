@@ -127,21 +127,6 @@ git log
 ```bash
 git log <branch-name>
 ```
-
-这个命令显示指定分支的提交历史。
-
-# git log 查看日志
-
-## 查看当前分支所有提交
-```bash
-git log
-```
-默认按照时间顺序，从最新的开始显示。
-
-## 查看特定分支的提交
-```bash
-git log <branch-name>
-```
 这个命令显示指定分支的提交历史。
 
 ## 指定输出日志数目
@@ -575,8 +560,6 @@ M       test01.txt
 显示提交的差异（默认选项），展示具体的代码变化。
 
 # git diff 查看文件差异
-
-## 选项
 
 `git diff` 的输出格式通常包括：
 
@@ -1424,6 +1407,241 @@ git mv <file> <directory>
 ```bash
 git mv <old-directory> <new-directory>
 ```
+
+# git restore
+
+```bash
+git restore [<options>] [--source=<tree>] [--staged] [--worktree] [--] <pathspec>…
+```
+
+## 指定恢复位置
+默认不指定则恢复工作目录。
+指定 `--staged` 则仅恢复暂存区。
+同时指定 `--staged --worktree` 则恢复工作目录和暂存区。
+
+## 恢复暂存区的特定文件
+
+已暂存的文件，希望取消暂存，但保持文件在工作目录中不变：
+```bash
+git restore --staged hello.c
+```
+
+## 恢复暂存区的全部文件
+
+```bash
+git restore --staged .
+```
+
+## 恢复暂存区的部分文件
+
+```bash
+git restore --staged *.cpp
+```
+
+## 恢复暂存区和工作目录的全部已跟踪的文件 
+
+```bash
+$ git restore --source=HEAD --staged --worktree .
+```
+
+不会修改未跟踪的文件
+
+## 从其他提交中恢复文件
+
+```bash
+$ git restore --source=origin/main~2 test01.txt
+```
+将指定文件恢复到 `origin/main` 分支的当前提交的前 2 个提交的版本，且恢复的是工作目录，不影响暂存区。
+
+# git revert
+
+`git revert` 用于撤销之前的提交。
+它创建一个新的提交，这个提交的内容是前一个提交的逆操作，即“反做”之前的提交。
+这个操作是安全的，因为它不会改变项目的历史记录，而是在历史记录的基础上新增一个提交来表示撤销操作。
+
+## 撤销最新的提交
+```bash
+git revert HEAD
+```
+
+## 撤销特定的提交
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main2)
+$ git log --oneline -5
+dc76ad7 (HEAD -> main2) Revert "update test01.txt: add main"
+16ac277 update test01.txt: add main
+03d14ae (origin/main, origin/HEAD, main) update main test01.txt
+737c5b7 commit B
+e67a0f3 add test02.txt and test03.txt
+```
+
+如撤销上面最后一个提交，执行以下命令：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main2)
+$ git log --oneline -5 | tail -n1 | cut -d" " -f1
+e67a0f3
+
+lx@lx MINGW64 /d/Documents/git_test04 (main2)
+$ git log --oneline -5 | tail -n1 | cut -d" " -f1 | xargs git revert
+[main2 b93b033] Revert "add test02.txt and test03.txt"
+ Date: Mon Jan 20 20:50:14 2025 +0800
+ 2 files changed, 1 insertion(+), 2 deletions(-)
+ delete mode 100644 test03.txt
+```
+
+撤销后查看日志，多了一个撤销的记录：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main2)
+$ git log --oneline -7
+b93b033 (HEAD -> main2) Revert "add test02.txt and test03.txt"
+dc76ad7 Revert "update test01.txt: add main"
+16ac277 update test01.txt: add main
+03d14ae (origin/main, origin/HEAD, main) update main test01.txt
+737c5b7 commit B
+e67a0f3 add test02.txt and test03.txt
+332de10 update file
+```
+
+## 撤销一系列提交
+- `git revert <commit>^..<commit>`：撤销从第一个提交到第二个提交之间的所有提交。
+- 不包括起始的提交
+
+## 撤销操作但不创建提交
+```bash
+git revert --no-commit abc123
+```
+
+## 撤销操作并编辑提交信息：
+```bash
+git revert --edit abc123
+```
+
+# Undo things
+
+## 修改本地的最新提交 git commit --amend
+- 仅针对本地最新的提交
+- 最新提交还未推送到远程
+
+## 撤销本地多个提交 git reset
+
+撤销最新的提交：
+```bash
+git reset --soft HEAD^
+```
+
+撤销最近的三次提交：
+```bash
+git reset --soft HEAD~3
+```
+
+### `--soft`
+
+- 重置 HEAD 到指定状态，但保留工作目录和暂存区的状态。
+
+### `--mixed`（默认）
+
+- 重置 HEAD 和暂存区到指定状态，但保留工作目录的状态。
+
+### `--hard`
+
+- 重置 HEAD、暂存区和工作目录到指定状态。
+
+
+### 显示被撤销的提交
+执行 `git reset --soft HEAD^` 后查看被撤销的上次提交，直接用 `git log` 无法查看之前被撤销的提交。
+
+#### 使用 `ORIG_HEAD`
+
+当执行 `git reset` 时，Git 会自动创建一个名为 `ORIG_HEAD` 的引用，指向原始的 `HEAD` 位置。
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (main)
+$ git log ORIG_HEAD --oneline -2
+fc003e8 rename 1.txt to 11.txt:wq
+e43f274 (HEAD -> main) Merge branch 'branch01'
+
+lx@lx MINGW64 /d/Documents/git_test03 (main)
+$ git log --oneline -2
+e43f274 (HEAD -> main) Merge branch 'branch01'
+03d14ae (origin/main, origin/HEAD) update main test01.txt
+```
+
+#### 使用 `git reflog`
+
+`git reflog` 显示 `HEAD` 的更新历史，你可以通过它找到被撤销的提交：
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (main)
+$ git log --oneline -3
+36c7d37 (HEAD -> main) update new
+e43f274 Merge branch 'branch01'
+03d14ae (origin/main, origin/HEAD) update main test01.txt
+```
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (main)
+$ git reflog -4
+36c7d37 (HEAD -> main) HEAD@{0}: commit: update new
+e43f274 HEAD@{1}: reset: moving to HEAD^
+5e51d74 HEAD@{2}: commit: update
+e43f274 HEAD@{3}: reset: moving to HEAD^
+```
+
+可以看见在 `5e51d74` 提交后，进行 reset，因此 HEAD 又变成 `e43f274`，然后又继续有新的提交。
+
+## 撤销暂存区的添加 git restore --staged
+撤销后修改仍会存在工作目录，但处于未暂存的状态。
+
+如撤销暂存区的全部修改：
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (main)
+$ git restore --staged .
+```
+
+## 撤销未暂存的修改 git restore
+
+撤销未暂存的全部修改，不影响已暂存的文件：
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (main)
+$ git restore .
+```
+
+## 撤销工作目录全部修改 git reset
+
+让工作目录和 HEAD 一致
+```bash
+git reset --hard HEAD
+```
+
+## 撤销远程的提交 git revert
+本地提交后 Push 到远程，本地用 git reset --soft HEAD^ 撤销了最近一次提交，如果远程该分支只有自己用，且远程没有比本地更新的提交，则可以 git push --force 覆盖远程提交记录。
+
+如果远程有更新的提交记录，则可以用 `git revert HEAD`，会新建一个撤销上次提交的提交记录，因此不会和远程冲突。
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (main)
+$ git log --oneline -3
+36c7d37 (HEAD -> main) update new
+e43f274 Merge branch 'branch01'
+03d14ae (origin/main, origin/HEAD) update main test01.txt
+```
+
+撤销最新一次提交
+```bash
+git revert HEAD
+```
+
+查看历史记录，发现过去的历史没有改变，只是新增了撤销的记录：
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (main)
+$ git log --oneline -3
+fabbb86 (HEAD -> main) Revert "update new"
+36c7d37 update new
+e43f274 Merge branch 'branch01'
+```
+
+撤销后可以用 `git push` 推送到远程仓库。
 
 # 常用案例
 ## 有冲突时指定使用版本
