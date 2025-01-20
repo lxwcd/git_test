@@ -2092,6 +2092,126 @@ e43f274 Merge branch 'branch01'
 撤销后可以用 `git push` 推送到远程仓库。
 
 # 常用案例
+
+## git add 筛选特定文件
+
+```bash
+git add *.cpp *.h
+```
+
+## 显示已跟踪被修改的文件名
+```bash
+git diff HEAD --name-only
+```
+
+## 筛选已跟踪被修改的文件
+
+```bash
+git diff HEAD --name-only | grep -E "*/demo/*"
+```
+或：
+```bash
+git status --porcelain | cut -d" " -f3- | grep -E "*/demo/*"
+```
+
+## 筛选已跟踪被修改的特定后缀文件
+
+```bash
+git diff HEAD --name-only |  grep -E "\.(cpp|h)$"
+```
+或：
+```bash
+git status --porcelain | cut -d" " -f3- |  grep -E "\.(cpp|h)$"
+```
+
+## git stash 过滤文件保存
+
+```bash
+git diff HEAD --name-only | grep -E "*/demo/*" | xargs git stash push -m "stash demo files" --
+```
+或：
+```bash
+git status --porcelain | cut -d" " -f3- | grep -E "*/demo/*" | xargs git stash push -m "stash demo files" --
+```
+
+## 输出未被跟踪的文件名
+```bash
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ git status -s
+AM git.md
+ M test01.txt
+?? .gitignore
+?? 0001-commit-B.patch
+?? 0001-fix-B.patch
+?? 0001-update-fix_B.patch
+?? 0002-commit-C.patch
+?? 0002-update-fix_B.patch
+?? 1.patch
+?? 2.txt
+
+lx@lx MINGW64 /d/Documents/git_test (fix_B)
+$ git status -s |  grep "??" | cut -d" " -f2
+.gitignore
+0001-commit-B.patch
+0001-fix-B.patch
+0001-update-fix_B.patch
+0002-commit-C.patch
+0002-update-fix_B.patch
+1.patch
+2.txt
+```
+
+## 恢复工作目录到最新提交
+
+### git stash
+```bash
+git stash push -m "message"
+```
+
+如果有没有被跟踪的文件，希望一起存起来：
+```bash
+git stash push --all -m "message"
+```
+
+### git checkout
+恢复已跟踪的文件：
+```bash
+git checkout HEAD -- .
+```
+
+再删除没有被跟踪的文件：
+```bash
+git clean -fd
+```
+
+### git reset
+
+恢复已跟踪的文件：
+```bash
+git reset --hard HEAD
+```
+
+再删除没有被跟踪的文件：
+```bash
+git clean -fd
+```
+或者：
+```bash
+$ git status --short | grep "??" | cut -d" " -f2 | xargs rm -rf
+```
+
+### git restore
+
+恢复已跟踪的文件：
+```bash
+$ git restore --source=HEAD --staged --worktree .
+```
+
+再删除没有被跟踪的文件：
+```bash
+git clean -fd
+```
+
 ## 有冲突时指定使用版本
 
 两个仓库中的一个分支都修改了文件 2.txt 的相同一行，但修改内容内容不同，一个仓库已经将修改推送到远程仓库，另一个仓库修改后提交到本地，然后 git pull 时提示有冲突：
@@ -2186,3 +2306,4 @@ git commit -m "message"
 ```bash
 git merge --continue
 ```
+
