@@ -5,7 +5,7 @@
 
 先查看当前时间是否正确：
 ```bash
-lxw@NEU-20240403OIC MINGW64 /e/src_git/IND400_trunk (develop)
+lxw@lx MINGW64 /e/src_git/demo (develop)
 $ date
 Fri Jan 17 06:41:27 GMT 2025
 ```
@@ -18,9 +18,30 @@ export TZ="CST-8"
 永久修改则在配置文件中修改，如当前用户修改可在 `~/.bashrc` 中设置
 修改完后 `. ~/.bashrc` 时期生效，再用 date 命令查看，时区已修改成功：
 ```bash
-lxw@NEU-20240403OIC MINGW64 /e/src_git/IND400_trunk (develop)
+lxw@lx MINGW64 /e/src_git/demo (develop)
 $ date
 Fri Jan 17 14:46:31 CST 2025
+```
+
+# git bash 中为常用命令设置别名
+
+希望全局配置，可以在 `/etc/profile.d/aliases.sh` 中添加。
+针对当前用户配置，在 `$HOME/.bashrc` 中添加。
+
+```bash
+alias stashsuobin='git diff --name-only | grep -E "\.(suo|bin)$" | xargs git stash push -m ".suo and .bin files" '
+alias restoresuobin='git status --porcelain | cut -d" " -f3- |  grep -E "\.(suo|bin)$" | xargs git restore -- '
+alias checkSkipWorktree=' git ls-files -v | grep "^S"'
+
+alias addUnchanged='git update-index --assume-unchanged '
+alias cancelAllSkipWorktree='git ls-files -v | grep "^S" | cut -d" " -f2 | xargs git update-index --no-skip-worktree '
+alias cancelAllUnchangedSkipWorktree='git ls-files -v | grep "^[S|s]" | cut -d" " -f2 | xargs git update-index --no-skip-worktree '
+alias cancelSkipWorktree='git update-index --no-skip-worktree '
+alias cancelUnchanged='git update-index --no-assume-unchanged '
+alias checkDeletedLog='git fsck --unreachable | grep commit | cut -d" " -f3 | xargs git log --merges --no-walk --oneline '
+alias checkSkipWorktree='git ls-files -v | grep "^S" '
+alias checkUnchangedSkipWorktree=' git ls-files -v | grep "^[S|s]" '
+alias restoreStashCommit='git update-ref --create-reflog refs/stash '
 ```
 
 # 修改 log 时区
@@ -28,6 +49,29 @@ Fri Jan 17 14:46:31 CST 2025
 ```bash
 git config --global log.date=local
 ```
+
+# git remote
+
+## 查看远程仓库名称列表
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main2)
+$ git remote
+origin
+```
+
+## 查看远程仓库URL
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main2)
+$ git remote -vv
+origin  https://github.com/lxwcd/git_test.git (fetch)
+origin  https://github.com/lxwcd/git_test.git (push)
+```
+
+## 添加本地远程仓库
+```bash
+git remote add local-origin file:///d/Documents/git_test
+```
+- 将 `D:/Documents/git_test` 仓库添加为远程仓库，别名为 `local-origin`。
 
 # git status 查看文件状态
 
@@ -1516,6 +1560,410 @@ git revert --no-commit abc123
 ```bash
 git revert --edit abc123
 ```
+
+# git stash
+
+## git stash 存放位置
+
+> The latest stash you created is stored in refs/stash; older stashes are found in the reflog of this reference and can be named using the usual reflog syntax (e.g. stash@{0} is the most recently created stash, stash@{1} is the one before it, stash@{2.hours.ago} is also possible). Stashes may also be referenced by specifying just the stash index (e.g. the integer n is equivalent to stash@{n}).
+
+```bash
+$ cat .git/refs/stash
+07929627e841f63c9c306a647df4e84c32ae6de2
+
+$ git stash list
+stash@{0}: modify test.md
+stash@{1}: modify 1.md
+stash@{2}: modify 2.md
+stash@{3}: modify 3.md
+```
+
+## git stash push 保存工作状态
+git stash 和 git stash push 效果相同。
+
+> Save your local modifications to a new stash entry and roll them back to HEAD (in the working tree and in the index). The <message> part is optional and gives the description along with the stashed state.
+
+不会保存没有被跟踪的文件。
+
+### `-m` 或 `--message` 添加描述
+
+```bash
+git stash push -m "WIP: Implement login feature"
+```
+
+### `-p` 或 `--patch` 交互存储
+
+```bash
+git stash push -p
+```
+
+### `-k` 或 `--keep-index` 保留暂存区的更改
+
+只会将工作区的更改保存到 stash 中，而暂存区的更改将被保留。
+
+```bash
+git stash push -k
+```
+
+### `-u` 或 `--include-untracked` 包含未跟踪的文件
+默认情况下，`git stash push` 只会保存已被追踪的文件的更改。
+
+### `-a` 或 `--all` 保存全部文件
+这个选项会保存所有文件的更改，包括未跟踪的文件和被 `.gitignore` 忽略的文件。
+
+```bash
+git stash push -a
+```
+
+### `-q` 或 `--quiet` 静默执行
+
+```bash
+git stash push -q
+```
+使用这个选项后，命令执行时不会输出任何信息。
+
+### `--pathspec-from-file=<file>` 从文件读取
+这个选项允许从文件中读取路径规范，而不是从命令行参数中读取。如果文件内容是 `-`，则从标准输入读取。
+
+```bash
+git stash push --pathspec-from-file=pathspecs.txt
+```
+
+### `--`
+这个选项用于消除歧义，将路径规范与选项分开。
+
+```bash
+git stash push -- path/to/file
+```
+使用这个选项后，`path/to/file` 会被视为路径规范，而不是选项。
+
+## git stash save
+```bash
+git stash save "optional message"
+```
+这个命令会保存当前的工作状态到一个 stash 中，并清理工作目录。如果省略 `"optional message"`，Git 会自动生成一个消息。
+不会保存未被跟踪的文件。
+
+## git stash list 列出所有 stash
+```bash
+git stash list
+```
+这个命令会列出所有的 stash，每个 stash 前面都有一个标识符，如 `stash@{0}`。
+
+## git stash apply 应用 stash
+```bash
+git stash apply
+```
+这个命令会应用最近的 stash 到当前工作目录。
+
+也可以指定一个 stash 来应用：
+```bash
+git stash apply stash@{n}
+```
+其中 `n` 是 stash 的索引号，最新的 stash 编号为 0，编号最大的为最先 stash 的内容。
+
+## git stash drop 删除 stash
+```bash
+git stash drop stash@{n}
+```
+这个命令会删除指定的 stash。
+
+## git stash pop 应用 stash 并删除
+```bash
+git stash pop
+```
+这个命令会应用最近的 stash 并从 stash 列表中删除它。
+
+## git stash show 预览 stash 内容
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ git stash show stash@{0}
+ 2.txt      |  1 -
+ test01.txt | 31 +++----------------------------
+ test03.txt |  1 +
+ 3 files changed, 4 insertions(+), 29 deletions(-)
+```
+
+## 仅查看 stash 中文件名
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ git stash show stash@{0} --name-only
+2.txt
+test01.txt
+test03.txt
+```
+
+## 比较 stash 与当前工作目录差异
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ git stash show stash@{1} -p
+diff --git a/1.patch b/1.patch
+index e61c591..90d1dfa 100644
+--- a/1.patch
++++ b/1.patch
+@@ -1 +1,2 @@
+ 0001-update-fix_B.patch
++1
+diff --git a/2.txt b/2.txt
+index c200906..91bc947 100644
+--- a/2.txt
++++ b/2.txt
+@@ -1 +1,3 @@
+ 222
++22
++2
+```
+
+- a 版本为工作目录版本
+- b 版本为 stash 中的版本 
+
+## 应用 stash 中的特定文件
+
+当前工作目录的 2.txt 文件内容：
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ cat 2.txt
+222
+```
+
+应用 `stash@{1}` 中的 2.txt 版本：
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ git checkout stash@{1} -- 2.txt
+
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ cat 2.txt
+222
+22
+2
+```
+
+### 强制覆盖
+```bash
+git checkout --force stash@{0} -- <file-path>
+```
+或者：
+```bash
+git checkout -f stash@{0} -- <file-path>
+```
+
+## 找回被删除的 stash 记录
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ git fsck --unreachable | grep commit | cut -d ' ' -f3 | xargs git log --merges --no-walk --oneline
+Checking object directories: 100% (256/256), done.
+Checking objects: 100% (33/33), done.
+99641b1 On test: stash test
+6fc3b2a WIP on test: 3030efb Merge branch 'fix_B' of https://github.com/lxwcd/git_test into fix_B
+99c8421 WIP on test: 3030efb Merge branch 'fix_B' of https://github.com/lxwcd/git_test into fix_B
+c66245f On fix_B: test
+c78d607 WIP on fix_B: c188c3c Merge branch 'fix_B' of https://github.com/lxwcd/git_test into fix_B
+d0bd729 WIP on fix_B: c188c3c Merge branch 'fix_B' of https://github.com/lxwcd/git_test into fix_B
+```
+
+根据日志的输出的 message 找到被删除的 stash，即 `9964b1`。
+
+将要恢复的 stash 记录重新 stash 并添加 message：
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ git update-ref --create-reflog refs/stash 99641b1 -m "restore stash : stash test"
+
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ git stash list
+stash@{0}: restore stash : stash test
+```
+
+# git fetch
+
+## 获取远程仓库的所有分支的最新状态
+```bash
+git fetch origin
+```
+
+## 获取特定远程分支的最新状态
+```bash
+git fetch origin develop
+```
+这个命令只会获取 `origin` 远程仓库的 `develop` 分支的最新状态。
+
+## 获取远程特定分支并映射到本地分支
+
+```bash
+git fetch origin src:dst
+```
+
+- src 为源端，即远程分支
+- dst 为目的端，即本地分支
+- 如果当前在 dst 分支，则无法 执行此命令
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ git fetch origin fix_B:test
+fatal: refusing to fetch into branch 'refs/heads/test' checked out at 'D:/Documents/git_test03'
+```
+
+## 删除远程不存在的分支引用 --prune
+```bash
+git fetch --prune
+```
+
+从远程仓库获取最新信息的同时， 清除远程跟踪分支中不再存在于远程仓库的分支。
+
+# git push
+
+## 设置本地分支跟踪远程分支
+
+推送到远程仓库的特定分支，而不是本地分支的同名分支：
+```bash
+git push <remote> <local-branch>:<remote-branch>
+```
+- `<remote>`：远程仓库的名称
+
+将本地 test 分支推送到远程的 test 分支，且设置跟踪状态，远程分支不存在则会在远程仓库中创建该分支：
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ git push -u origin HEAD:test
+Total 0 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
+remote:
+remote: Create a pull request for 'test' on GitHub by visiting:
+remote:      https://github.com/lxwcd/git_test/pull/new/test
+remote:
+To https://github.com/lxwcd/git_test.git
+ * [new branch]      HEAD -> test
+branch 'test' set up to track 'origin/test'.
+```
+
+- `:` 前为源分支，即本地分支
+- `:` 后为目的分支，即远程分支
+- `-u` 设置本地分支跟踪远程对应分支，以后可以直接 `git push`
+
+## 推送所有本地分支
+
+推送所有本地分支到远程仓库：
+```bash
+git push --all <remote>
+```
+
+## 强制推送
+
+```bash
+git push --force <remote> <branch>
+```
+或者：
+```bash
+git push -f <remote> <branch>
+```
+
+## 删除远程分支
+
+```bash
+git push <remote> --delete <branch>
+```
+或者：
+```bash
+git push <remote> :<branch>
+```
+
+## 推送特定提交
+
+```bash
+git push <remote> <commit>:<branch>
+```
+
+# git pull
+
+`git pull` 用于将远程仓库的更改拉取到本地仓库。
+它实际上是一个组合命令，等同于 `git fetch` 后跟 `git merge`。
+
+## 从远程仓库拉取最新代码并合并到当前分支
+```bash
+git pull origin master
+```
+这个命令会从远程仓库 `origin` 的 `master` 分支拉取最新的代码，并尝试与当前分支合并。
+
+如果当前分支已经设置跟踪远程分支，可以省略远程分支名：
+```bash
+git pull origin
+```
+
+如果当前分支只跟踪一个远程分支，可以完全省略参数：
+```bash
+git pull
+```
+
+## --rebase
+
+使用 `rebase` 代替 `merge` 来合并更改：
+```bash
+git pull --rebase origin master
+```
+
+## --ff-only
+
+只允许快进式合并，不允许产生新合并提交：
+```bash
+git pull --ff-only origin master
+```
+如果无法进行快进式合并，命令会失败。
+
+## --no-commit
+
+拉取后不自动提交合并的结果：
+```bash
+git pull --no-commit origin master
+```
+
+# git rebase
+> [Git - Rebasing](https://git-scm.com/book/en/v2/Git-Branching-Rebasing) 
+
+# git cherry-pick
+> Apply the changes introduced by some existing commits.
+
+默认会 pick 提交到当前分支且新增一个同样的提交记录，除了 hash 值不一样，其他都一样。
+
+如果 Pick 多个提交，且顺序相关，最好按照原来的顺序从旧往前 pick：
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ git log --oneline -5 fix_B
+3030efb (fix_B) Merge branch 'fix_B' of https://github.com/lxwcd/git_test into fix_B
+3c20c79 update git.md
+171d25c update 2.txt 22
+f54dd26 update 2.txt 222
+15f80f2 (HEAD -> test, origin/test) update test02.txt
+```
+
+想 pick 上面 5 个提交，且按照原始的顺序：
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ git log --oneline -5 fix_B  | tac | cut -d" " -f1
+15f80f2
+f54dd26
+171d25c
+3c20c79
+3030efb
+
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ git log --oneline -5 fix_B  | tac | cut -d" " -f1 | xargs git cherry-pick --no-commit
+```
+
+## 不产生提交记录 --no-commit
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ git log --oneline -1 main
+cbf4932 (main) update test03.txt
+
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ git log --oneline -1 main | cut -d" " -f1
+cbf4932
+
+lx@lx MINGW64 /d/Documents/git_test03 (test)
+$ git log --oneline -1 main | cut -d" " -f1  | xargs git cherry-pick --no-commit
+```
+
+修改会在暂存区，不产生提交记录。
 
 # Undo things
 
