@@ -173,6 +173,55 @@ git log <branch-name>
 ```
 这个命令显示指定分支的提交历史。
 
+## 查看特定分支的提交
+```bash
+git log <branch-name>
+```
+这个命令显示指定分支的提交历史。
+
+## 查看特定分支的过去某个提交
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git log --oneline -7 main2
+a47ac74 (main2) Revert "update main test01.txt"
+ca44b51 Revert "update test01.txt: add main"
+006fed4 Reapply "update test01.txt: add main"
+b93b033 Revert "add test02.txt and test03.txt"
+dc76ad7 Revert "update test01.txt: add main"
+16ac277 update test01.txt: add main
+03d14ae (HEAD -> main3, origin/main, origin/HEAD, main) update main test01.txt
+```
+
+查看 main2 分支的第 6 个父提交：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git log --oneline main2~6 -1
+03d14ae (HEAD -> main3, origin/main, origin/HEAD, main) update main test01.txt
+```
+
+## 查看特定分支的过去部分提交
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git log --oneline -7 main2
+a47ac74 (main2) Revert "update main test01.txt"
+ca44b51 Revert "update test01.txt: add main"
+006fed4 Reapply "update test01.txt: add main"
+b93b033 Revert "add test02.txt and test03.txt"
+dc76ad7 Revert "update test01.txt: add main"
+16ac277 update test01.txt: add main
+03d14ae (HEAD -> main3, origin/main, origin/HEAD, main) update main test01.txt
+```
+
+查看 main2 分支的第 2 个父提交和之后的 3 个提交：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git log --oneline main2~2 -3
+006fed4 Reapply "update test01.txt: add main"
+b93b033 Revert "add test02.txt and test03.txt"
+dc76ad7 Revert "update test01.txt: add main"
+```
 ## 指定输出日志数目
 ```bash
 git log -3
@@ -1917,6 +1966,8 @@ git pull --no-commit origin master
 > [Git - Rebasing](https://git-scm.com/book/en/v2/Git-Branching-Rebasing) 
 
 # git cherry-pick
+> [Git - git-cherry-pick Documentation](https://git-scm.com/docs/git-cherry-pick) 
+
 > Apply the changes introduced by some existing commits.
 
 默认会 pick 提交到当前分支且新增一个同样的提交记录，除了 hash 值不一样，其他都一样。
@@ -1948,6 +1999,14 @@ lx@lx MINGW64 /d/Documents/git_test03 (test)
 $ git log --oneline -5 fix_B  | tac | cut -d" " -f1 | xargs git cherry-pick --no-commit
 ```
 
+## pick 其他分支的特定提交
+
+pick main2 分支的第 5 个父提交：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git cherry-pick main2~5
+```
+
 ## 不产生提交记录 --no-commit
 
 ```bash
@@ -1964,6 +2023,99 @@ $ git log --oneline -1 main | cut -d" " -f1  | xargs git cherry-pick --no-commit
 ```
 
 修改会在暂存区，不产生提交记录。
+
+## pick 本分支落后其他分支的提交
+
+本分支当前的记录：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main2)
+$ git log --oneline -6 origin/main
+03d14ae (origin/main, origin/HEAD, main) update main test01.txt
+737c5b7 commit B
+e67a0f3 add test02.txt and test03.txt
+332de10 update file
+470dcf0 add files
+```
+
+查看本分支落后 main2 分支的记录：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git log ^HEAD main2 --oneline
+a47ac74 (main2) Revert "update main test01.txt"
+ca44b51 Revert "update test01.txt: add main"
+006fed4 Reapply "update test01.txt: add main"
+b93b033 Revert "add test02.txt and test03.txt"
+dc76ad7 Revert "update test01.txt: add main"
+16ac277 update test01.txt: add main
+```
+
+应用落后的这些提交，按照原始顺序：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git cherry-pick ..main2
+```
+或者：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git cherry-pick ^HEAD main2
+```
+
+查看新的提交，看到最新的 6 次提交即为 pick 的提交，仅 hash 值不同，message 相同：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git log --oneline -8
+784d0df (HEAD -> main3) Revert "update main test01.txt"
+c36999f Revert "update test01.txt: add main"
+2b1c993 Reapply "update test01.txt: add main"
+afd6228 Revert "add test02.txt and test03.txt"
+ed7571e Revert "update test01.txt: add main"
+3a37c60 update test01.txt: add main
+03d14ae (origin/main, origin/HEAD, main) update main test01.txt
+737c5b7 commit B
+```
+
+## pick 其他分支连续的提交
+
+pick main2 分支从第 5 个父提交到第 3 个父提交：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git cherry-pick main2~6..main2~3
+```
+
+这里不包括起始提交 main2~6。 
+
+main2 分支提交记录：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git log --oneline -7 main2
+a47ac74 (main2) Revert "update main test01.txt"
+ca44b51 Revert "update test01.txt: add main"
+006fed4 Reapply "update test01.txt: add main"
+b93b033 Revert "add test02.txt and test03.txt"
+dc76ad7 Revert "update test01.txt: add main"
+16ac277 update test01.txt: add main
+03d14ae (HEAD -> main3, origin/main, origin/HEAD, main) update main test01.txt
+```
+
+本分支初始提交记录：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git log --oneline -3
+03d14ae (HEAD -> main3, origin/main, origin/HEAD, main) update main test01.txt
+737c5b7 commit B
+e67a0f3 add test02.txt and test03.txt
+```
+
+本分支合并后的提交记录：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git log --oneline -5
+ee19c9a (HEAD -> main3) Revert "add test02.txt and test03.txt"
+11df87e Revert "update test01.txt: add main"
+396ebec update test01.txt: add main
+03d14ae (origin/main, origin/HEAD, main) update main test01.txt
+737c5b7 commit B
+```
 
 # Undo things
 
