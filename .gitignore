@@ -1,1 +1,8 @@
-1.txt
+#1/*
+#!*.patch
+#foo/1.patch
+#doc/*
+/*
+!/doc
+/doc/*
+!/doc/foo
