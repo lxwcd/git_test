@@ -159,7 +159,307 @@ $ git status -s |  grep "??" | cut -d" " -f2
 2.txt
 ```
 
+# Author and Committer
+> [Why is git AuthorDate different from CommitDate?](https://stackoverflow.com/questions/11856983/why-is-git-authordate-different-from-commitdate) 
+> [Git - Viewing the Commit History](https://git-scm.com/book/en/v2/Git-Basics-Viewing-the-Commit-History) 
+
+> You may be wondering what the difference is between author and committer. The author is the person who originally wrote the work, whereas the committer is the person who last applied the work. So, if you send in a patch to a project and one of the core members applies the patch, both of you get credit — you as the author, and the core member as the committer. 
+  
+# git date
+> [Dates in Git - Azure Repos](https://learn.microsoft.com/en-us/azure/devops/repos/git/git-dates?view=azure-devops) 
+
+
+## Author Date
+作者时间是指提交的作者（Author）创建提交时的时间戳。它记录了最初编写代码并创建提交的时间。
+
+在正常的 git commit 操作中，作者时间和提交者时间是相同的。
+
+### 查看 Author Date
+> [Git - Viewing the Commit History](https://git-scm.com/book/en/v2/Git-Basics-Viewing-the-Commit-History#pretty_format) 
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_B)
+$ git log --pretty=fuller  -1
+commit baddcc29cc6f0cd12a793ad33f8caa198c97bcaa (HEAD -> fix_B)
+Author:     John <John@163.com>
+AuthorDate: Sun Feb 9 20:46:40 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 21:00:08 2025 +0800
+
+    add files and modify author
+```
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git log --pretty=format:"%h %an %ad" fix_C -1
+b3e36b5 John Sun Feb 9 20:46:40 2025 +0800
+```
+%h：提交的哈希值（短格式）
+%an：作者名称（Author Name）
+%ad：作者时间（Author Date）
+
+### git commit --date 修改 Author date
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D)
+$ date
+2025年02月 9日 21:17:02
+```
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D)
+$ git commit --date="2025-01-02 14:00:00" -m "Fix bug" --author="Alice <ALice@163.com>"
+[fix_D 91b0e3c] Fix bug
+ Author: Alice <ALice@163.com>
+ Date: Thu Jan 2 14:00:00 2025 +0800
+ 1 file changed, 1 insertion(+)
+```
+
+查看日志，Author Date 被修改为指定时间，但 commit date 为当前时间。
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D)
+$ git log --pretty=fuller -1
+commit 91b0e3c6432ccf89a9809c087fe933bf05c6966e (HEAD -> fix_D)
+Author:     Alice <ALice@163.com>
+AuthorDate: Thu Jan 2 14:00:00 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 21:17:51 2025 +0800
+
+    Fix bug
+```
+
+### git cherry-pick 不会修改 Author date
+`git cherry-pick` 没有使用 `--no-commit` 选项，且没有冲突，不会修改作者时间戳，但会更新提交时间。
+
+fix_C 分支有一个提交记录：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_C)
+$ git log --pretty=fuller -1
+commit b3e36b570b1067a9a3bf6e57fe33589afbfdb31c (HEAD -> fix_C)
+Author:     John <John@163.com>
+AuthorDate: Sun Feb 9 20:46:40 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 20:46:40 2025 +0800
+
+    add files and modify author
+```
+
+`git cherry-pick` 应用该提交到 fix_B 分支：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_B)
+$ git cherry-pick fix_C
+[fix_B baddcc2] add files and modify author
+ Author: John <John@163.com>
+ Date: Sun Feb 9 20:46:40 2025 +0800
+ 24 files changed, 390 insertions(+)
+```
+
+查看 fix_B 分支的提交记录，发现提交时间更新了，但 Author Date 没有更新：
+```cpp
+lx@lx MINGW64 /d/Documents/git_test04 (fix_B)
+$ git log --pretty=fuller  -1
+commit baddcc29cc6f0cd12a793ad33f8caa198c97bcaa (HEAD -> fix_B)
+Author:     John <John@163.com>
+AuthorDate: Sun Feb 9 20:46:40 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 21:00:08 2025 +0800
+
+    add files and modify author
+```
+
+### git cherry-pick 解决冲突后不修改 Author Date
+`git cherry-pick` 如果有冲突，根据提示和 git status 查看的状态打开冲突文件解决冲突。
+```bash
+
+lx@lx MINGW64 /d/Documents/git_test04 (main2_01)
+$ git cherry-pick main2
+Auto-merging test01.txt
+CONFLICT (content): Merge conflict in test01.txt
+error: could not apply 3b671ba... modify test01.txt , add C
+hint: After resolving the conflicts, mark them with
+hint: "git add/rm <pathspec>", then run
+hint: "git cherry-pick --continue".
+hint: You can instead skip this commit with "git cherry-pick --skip".
+hint: To abort and get back to the state before "git cherry-pick",
+hint: run "git cherry-pick --abort".
+hint: Disable this message with "git config advice.mergeConflict false"
+```
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main2_01|CHERRY-PICKING)
+$ git status
+On branch main2_01
+You are currently cherry-picking commit 3b671ba.
+  (fix conflicts and run "git cherry-pick --continue")
+  (use "git cherry-pick --skip" to skip this patch)
+  (use "git cherry-pick --abort" to cancel the cherry-pick operation)
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+        both modified:   test01.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+解决冲突后 `git add` 将文件添加到暂存区，然后 `git cherry-pick --continue` 继续执行 cherry-pick 操作，这时会打开窗口写提交日志信息，默认显示原始的日志，可以直接使用或者修改日志 message：
+```bash
+modify test01.txt , add C
+
+# Conflicts:
+#	test01.txt
+#
+# It looks like you may be committing a cherry-pick.
+# If this is not correct, please run
+#	git update-ref -d CHERRY_PICK_HEAD
+# and try again.
+
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Author:    Bob <Bob@163.com>
+# Date:      Sun Feb 9 18:58:12 2025 +0800
+#
+# On branch main2_01
+# You are currently cherry-picking commit 3b671ba.
+#
+# Changes to be committed:
+#	modified:   test01.txt
+#
+```
+
+完成后查看日志发现 Author Date 没有被修改，但 Commit Date 更新为当前时间：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main2_01)
+$ git log --pretty=fuller -1
+commit f537c63676cc209de5bdcd1b79ba79234c7d1552 (HEAD -> main2_01)
+Author:     Bob <Bob@163.com>
+AuthorDate: Sun Feb 9 18:58:12 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 22:32:24 2025 +0800
+
+    modify test01.txt , add C
+```
+
+### git cherry-pick --no-commit 修改 Author date
+如果 git cherry-pick --no-commit 则会自己提交，因此改变作者信息和时间：
+
+fix_C 分支有一个提交记录：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_C)
+$ git log --pretty=fuller -1
+commit b3e36b570b1067a9a3bf6e57fe33589afbfdb31c (HEAD -> fix_C)
+Author:     John <John@163.com>
+AuthorDate: Sun Feb 9 20:46:40 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 20:46:40 2025 +0800
+
+    add files and modify author
+```
+
+`git cherry-pick` 应用该提交到 main3 分支：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git cherry-pick fix_C --no-commit
+
+```
+
+手动提交：
+```cpp
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git commit -m "cherry-pick fix_C and commit manually"
+[main3 d228105] cherry-pick fix_C and commit manually
+ 24 files changed, 390 insertions(+)
+```
+
+查看日志发现作者时间戳和提交时间戳都更新了：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git log --pretty=fuller  -1
+commit d228105d37848565b1ab948a8ae5d12c32bdb10f (HEAD -> main3)
+Author:     lxwcd <15521168075@163.com>
+AuthorDate: Sun Feb 9 21:05:30 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 21:05:30 2025 +0800
+
+    cherry-pick fix_C and commit manually
+```
+
+### git rebase 和 git cherry-pick 影响相同
+
+## Commit Date
+提交者时间是指提交被最终记录到仓库中的时间戳。它记录了提交被实际写入 Git 历史的时间。
+
+在正常的 git commit 操作中，提交者时间和作者时间是相同的。
+
+### 查看 Commit Date 
+> [Git - Viewing the Commit History](https://git-scm.com/book/en/v2/Git-Basics-Viewing-the-Commit-History#pretty_format) 
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D)
+$ git log --pretty=fuller  -1 fix_C
+commit b3e36b570b1067a9a3bf6e57fe33589afbfdb31c (fix_C)
+Author:     John <John@163.com>
+AuthorDate: Sun Feb 9 20:46:40 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 20:46:40 2025 +0800
+
+    add files and modify author
+```
+
+或者：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D)
+$ git log --pretty=format:"%h %cn %cd" fix_C -1
+b3e36b5 lxwcd Sun Feb 9 20:46:40 2025 +0800
+```
+
+%cn：提交者名称（Committer Name）
+%cd：提交者时间（Committer Date）
+
+### git cherry-pick 和 git rebase 更新 commit 时间戳
+在 git rebase 或 git cherry-pick 等操作中，提交者时间会更新为当前时间，因为这些操作会重新生成提交对象。
+
+## Push Date
+> [Dates in Git - Azure Repos](https://learn.microsoft.com/en-us/azure/devops/repos/git/git-dates?view=azure-devops) 
+
+推送时间是指提交被推送到远程仓库的时间。Git 本身并没有直接记录推送时间，但可以通过一些工具或远程仓库的记录来查看。
+
+推送时间通常由远程仓库（如 GitHub、GitLab 等）记录，而不是直接存储在 Git 提交对象中。
+
+每次执行 git push 时，远程仓库会记录推送的时间戳。
+
 # git log 查看日志
+
+## 默认根据 Commit Date 排序
+即使 Author Date 比较旧，但排序根据 Commit Date，因此其他分支合并到主分支时，尽管某些提交的 Author Date 时间比较旧，但最后排序显示时根据合并到主分支的顺序显示。
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_C)
+$ git log --pretty=fuller -3
+commit 3b634a779435438654cdbcd2479d14e4855ce5ee (HEAD -> fix_C)
+Author:     lxwcd <15521168075@163.com>
+AuthorDate: Wed Jan 1 23:03:34 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 23:03:34 2025 +0800
+
+    modify 1.patch , change author date
+
+commit 95e40db1e205b1de7ac81fb58d40c7114df160b8
+Author:     lxwcd <15521168075@163.com>
+AuthorDate: Mon Jan 20 22:53:50 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 22:53:50 2025 +0800
+
+    modify 2.txt, change author date
+
+commit 9d7b614d7f37f3e6fbe29967f8d499e8d736d4d1
+Author:     lxwcd <15521168075@163.com>
+AuthorDate: Tue Feb 4 22:44:33 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 22:44:33 2025 +0800
+
+    modify 2.txt, change author date
+```
 
 ## 查看当前分支所有提交
 ```bash
@@ -299,6 +599,68 @@ Date:   Sun Jan 12 21:22:45 2025 +0800
 ## 自定义格式 --pretty
 使用`--pretty`参数，可以自定义日志的显示格式。
 
+### --pretty=fuller 查看 Author 和 Committer
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_E)
+$ git log --pretty=fuller fix_C -1
+commit b3e36b570b1067a9a3bf6e57fe33589afbfdb31c (fix_C)
+Author:     John <John@163.com>
+AuthorDate: Sun Feb 9 20:46:40 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 20:46:40 2025 +0800
+
+    add files and modify author
+```
+
+### 查看 Author Date
+> [Git - Viewing the Commit History](https://git-scm.com/book/en/v2/Git-Basics-Viewing-the-Commit-History#pretty_format) 
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_B)
+$ git log --pretty=fuller  -1
+commit baddcc29cc6f0cd12a793ad33f8caa198c97bcaa (HEAD -> fix_B)
+Author:     John <John@163.com>
+AuthorDate: Sun Feb 9 20:46:40 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 21:00:08 2025 +0800
+
+    add files and modify author
+```
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main3)
+$ git log --pretty=format:"%h %an %ad" fix_C -1
+b3e36b5 John Sun Feb 9 20:46:40 2025 +0800
+```
+%h：提交的哈希值（短格式）
+%an：作者名称（Author Name）
+%ad：作者时间（Author Date）
+
+### 查看 Commit Date 
+> [Git - Viewing the Commit History](https://git-scm.com/book/en/v2/Git-Basics-Viewing-the-Commit-History#pretty_format) 
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D)
+$ git log --pretty=fuller  -1 fix_C
+commit b3e36b570b1067a9a3bf6e57fe33589afbfdb31c (fix_C)
+Author:     John <John@163.com>
+AuthorDate: Sun Feb 9 20:46:40 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 20:46:40 2025 +0800
+
+    add files and modify author
+```
+
+或者：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D)
+$ git log --pretty=format:"%h %cn %cd" fix_C -1
+b3e36b5 lxwcd Sun Feb 9 20:46:40 2025 +0800
+```
+
+%cn：提交者名称（Committer Name）
+%cd：提交者时间（Committer Date）
+
 ### 哈希值 - 作者，相对日期 : message
 ```bash
 $ git log --pretty=format:"%h - %an, %ar : %s"
@@ -370,7 +732,7 @@ $ git log --author="Scott Chacon" --grep="version"
 
 这将显示所有作者为“Scott Chacon”且提交信息中包含“version”的提交。
 
-## 文件路径过滤
+## 查看特定文件的日志  
 
 ```bash
 lx@lx MINGW64 /d/Documents/git_test (fix_B)
@@ -657,337 +1019,341 @@ M       test01.txt
 
 差异内容显示从 a 版本到 b 版本需要做的修改。
 
-## 比较工作区和暂存区的差异
-
-```bash
-git diff
-```
-这个命令显示自上次提交以来**未暂存**的更改。
-不包括没有被跟踪的文件。
-如果文件已暂存，不会查看到。
-
-```bash
-lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
-$ git diff
-warning: in the working copy of 'test01.txt', LF will be replaced by CRLF the next time Git touches it
-diff --git a/test01.txt b/test01.txt
-index cd7fb11..a821b44 100644
---- a/test01.txt
-+++ b/test01.txt
-@@ -4,3 +4,4 @@ local modify test01.txt
- A
- b
- C
-+001
-```
-
-- a 最新提交版本
-- b 表示当前工作目录未暂存的版本
-- `100644` 中 `100` 表示文件类型为普通文件，`644` 表示文件权限，可以通过 `ll` 查看：
-```bash
-lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
-$ ll test01.txt
--rw-r--r-- 1 lx 197121 56 12月 21 22:10 test01.txt
-```
-- `@@ -4,3 +4,4 @@ local modify test01.txt` 
-a 版本的修改从第 4 行开始，共 3 行
-b 版本的修改为第 4 行开始，共 4 行
-- `001` 表示 a 版本需要增加改行才能和 b 版本一致
-
-## 比较已暂存的文件和最新提交的差异
-```bash
-git diff --cached
-```
-或者
-```bash
-git diff --staged
-```
-这些命令显示已暂存的更改与上次提交的差异。
-不会查看到没有暂存的文件差异。
-
-将工作目录的修改 add 到暂存区后，查看：
-```bash
-lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
-$ git status
-On branch fix_B
-Changes to be committed:
-  (use "git restore --staged <file>..." to unstage)
-        modified:   test01.txt
-
-Untracked files:
-  (use "git add <file>..." to include in what will be committed)
-        test05.txt
-
-
-lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
-$ git diff
-
-lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
-$ git diff --cached
-diff --git a/test01.txt b/test01.txt
-index cd7fb11..a821b44 100644
---- a/test01.txt
-+++ b/test01.txt
-@@ -4,3 +4,4 @@ local modify test01.txt
- A
- b
- C
-+001
-```
-a 表示最新的提交版本
-b 表示暂存区的版本
-
-## 比较工作区和最新提交的差异
-```bash
-lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
-$ git diff HEAD
-warning: in the working copy of 'test02.txt', LF will be replaced by CRLF the next time Git touches it
-diff --git a/test01.txt b/test01.txt
-index cd7fb11..a821b44 100644
---- a/test01.txt
-+++ b/test01.txt
-@@ -4,3 +4,4 @@ local modify test01.txt
- A
- b
- C
-+001
-diff --git a/test02.txt b/test02.txt
-index 8de02e1..98bbcac 100644
---- a/test02.txt
-+++ b/test02.txt
-@@ -1,2 +1,3 @@
- test02
--local git rebase
-\ No newline at end of file
-+local git rebase002
-+002
-```
-
-工作区中跟踪的文件，已暂存和未暂存的文件和最新提交的差异都能看到。
-a 表示最新的提交版本
-b 表示工作目录的版本
-
-## 比较当前工作目录中特定文件和最新提交的差异
-```bash
-lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
-$ git diff HEAD -- test01.txt
-diff --git a/test01.txt b/test01.txt
-index cd7fb11..a821b44 100644
---- a/test01.txt
-+++ b/test01.txt
-@@ -4,3 +4,4 @@ local modify test01.txt
- A
- b
- C
-+001
-```
-
-a 表示最新的提交版本
-b 表示工作目录的版本
-指定查看 test01.txt 文件和 HEAD 的差异。
-
-## 比较当前工作目录和任意提交的差异
-```bash
-lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
-$ git diff 332de10
-diff --git a/test01.txt b/test01.txt
-index 4c19859..a821b44 100644
---- a/test01.txt
-+++ b/test01.txt
-@@ -1 +1,7 @@
- test01
-+git pull
-+local modify test01.txt
-+A
-+b
-+C
-+001
-```
-
-a 为指定的提交版本
-b 为当前工作目录，包括为暂存的修改，不包括未跟踪的文件
-
-## 比较当前已暂存和任意提交的差异 
-```bash
-$ git diff 332de10 --cached
-diff --git a/test01.txt b/test01.txt
-index 4c19859..a821b44 100644
---- a/test01.txt
-+++ b/test01.txt
-@@ -1 +1,7 @@
- test01
-+git pull
-+local modify test01.txt
-+A
-+b
-+C
-+001
-```
-
-a 为指定的提交版本
-b 为当前工作目录已暂存的文件修改
-
-## 比较两个提交
-```bash
-git diff <commit1> <commit2>
-```
-这个命令比较两个提交之间的差异。顺序不同则结果不同。
-
-```bash
-lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
-$ git diff 332de10 HEAD
-diff --git a/test01.txt b/test01.txt
-index 4c19859..cd7fb11 100644
---- a/test01.txt
-+++ b/test01.txt
-@@ -1 +1,6 @@
- test01
-+git pull
-+local modify test01.txt
-+A
-+b
-+C
-```
-
-a 为 332de10 提交版本
-b 为当前分支最新提交。
-
-如果调换顺序：
-```bash
-lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
-$ git diff HEAD 332de10
-diff --git a/test01.txt b/test01.txt
-index cd7fb11..4c19859 100644
---- a/test01.txt
-+++ b/test01.txt
-@@ -1,6 +1 @@
- test01
--git pull
--local modify test01.txt
--A
--b
--C
-```
-
-a 为当前分支最新提交。
-b 为 332de10 提交版本
-相当于 332de10 相对于 HEAD 的变化，因此 HEAD 中增加的内容前面为 -，表示需要减去这些内容才能和 a 的版本一致。
-
-## 比较当前最新提交和上一次提交的差异
-```bash
-lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)
-$ git diff HEAD^ HEAD
-diff --git a/test01.txt b/test01.txt
-index 5c232c3..cd7fb11 100644
---- a/test01.txt
-+++ b/test01.txt
-@@ -2,5 +2,5 @@ test01
- git pull
- local modify test01.txt
- A 
--B
-+b
- C
-```
-
-a 为 HEAD^ 上一次提交版本
-b 为 HEAD 最新提交版本
-
-## 比较两个分支最新提交的差异
-
-```bash
-git diff <branch1> <branch2>
-```
-或者等价于：
-```bash
-git diff <branch1>..<branch2>
-```
-
-这个顺序则 a 为 branch1 版本，b 为 branch2。 
-查看的是两个分支的最新提交的差异。
-
-如果调换顺序，则 a 和 b 的版本也调换：
-```bash
-git diff <branch2> <branch1>
-```
-这个顺序则 a 为 branch2 版本，b 为 branch1。
-
-## 比较一个分支相对于另一个分支的差异
-
-```bash
-git diff <branch1>...<branch2>
-```
-
-这个命令显示从 `branch1` 和 `branch2` 的共同祖先到 `branch2` 的所有差异。
-即从两个分支开始分叉后，branch2 上所有的提交内容相对共同祖先的差异。
-查看差异中 a 为两个分支共同的祖先，b 为 branch2 最新提交。
-
-注意和 ```git diff <branch1>..<branch2>``` 的区别，两个点号表示两个分支最新提交的差异。
-
-## 查看差异的文件名
-```bash
-$ git diff --name-only
-```
-
-## 比较工作目录和 stash 中特定文件差别
-```bash
-lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (main)
-$ echo "000 modify after stash test01" >> test01.txt
-
-lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (main)
-$ git diff stash@{0} -- test01.txt
-warning: in the working copy of 'test01.txt', LF will be replaced by CRLF the next time Git touches it
-diff --git a/test01.txt b/test01.txt
-index d494af0..86e607d 100644
---- a/test01.txt
-+++ b/test01.txt
-@@ -4,4 +4,4 @@ local modify test01.txt
- A
- B
- add main test01.txt
--stash test01.txt
-+000 modify after stash test01
-```
-
-a 为 stash@{0} 的版本
-b 为当前工作目录
-
-## 比较暂存区和 stash 中特定文件差别
-```bash
-lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (main)
-$ git diff stash@{0} --cached -- test01.txt
-diff --git a/test01.txt b/test01.txt
-index d494af0..9d86808 100644
---- a/test01.txt
-+++ b/test01.txt
-@@ -4,4 +4,3 @@ local modify test01.txt
- A
- B
- add main test01.txt
--stash test01.txt
-```
-
-a 为 stash@{0}
-b 为暂存区
-
-## 查看当前最新提交和 stash 的差异
-```bash
-git diff stash@{0} HEAD
-```
-
-a 为 stash@{0}
-b 为HEAD
-
-## 查看两个分支某个文件的差异
-```bash
-git diff <branch1> <branch2> -- <file-path>
-```
-
-要查看两个分支中某个文件夹的差异：
-```bash
-git diff <branch1> <branch2> -- <folder-path>
-```
-
+## 比较工作区和暂存区的差异  
+> [Git - git-diff Documentation](https://git-scm.com/docs/git-diff#Documentation/git-diff.txt-codegitdiffcode)   
+> [git diff - Comparing Changes in Git | Refine](https://refine.dev/blog/git-diff-command/#basic-example)   
+  
+```bash  
+git diff  
+```  
+这个命令显示自上次提交以来**未暂存**的更改。  
+不包括没有被跟踪的文件。  
+如果文件已暂存，不会查看到。  
+  
+```bash  
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)  
+$ git diff  
+warning: in the working copy of 'test01.txt', LF will be replaced by CRLF the next time Git touches it  
+diff --git a/test01.txt b/test01.txt  
+index cd7fb11..a821b44 100644  
+--- a/test01.txt  
++++ b/test01.txt  
+@@ -4,3 +4,4 @@ local modify test01.txt  
+ A  
+ b  
+ C  
++001  
+```  
+  
+- a 暂存区，旧版本  
+- b 工作区，最新版本，比 a 多了已修改但未暂存的内容  
+- `100644` 中 `100` 表示文件类型为普通文件，`644` 表示文件权限，可以通过 `ll` 查看：  
+```bash  
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)  
+$ ll test01.txt  
+-rw-r--r-- 1 lx 197121 56 12月 21 22:10 test01.txt  
+```  
+- `@@ -4,3 +4,4 @@ local modify test01.txt`   
+a 版本的修改从第 4 行开始，共 3 行  
+b 版本的修改为第 4 行开始，共 4 行  
+- `001` 表示 a 版本需要增加改行才能和 b 版本一致  
+  
+## 比较已暂存的文件和最新提交的差异  
+```bash  
+git diff --cached  
+```  
+或者  
+```bash  
+git diff --staged  
+```  
+这些命令显示已暂存的更改与上次提交的差异。  
+不会查看到没有暂存的文件差异。  
+  
+将工作目录的修改 add 到暂存区后，查看：  
+```bash  
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)  
+$ git status  
+On branch fix_B  
+Changes to be committed:  
+  (use "git restore --staged <file>..." to unstage)  
+        modified:   test01.txt  
+  
+Untracked files:  
+  (use "git add <file>..." to include in what will be committed)  
+        test05.txt  
+  
+  
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)  
+$ git diff  
+  
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)  
+$ git diff --cached  
+diff --git a/test01.txt b/test01.txt  
+index cd7fb11..a821b44 100644  
+--- a/test01.txt  
++++ b/test01.txt  
+@@ -4,3 +4,4 @@ local modify test01.txt  
+ A  
+ b  
+ C  
++001  
+```  
+a 表示最新的提交版本，旧版本  
+b 表示暂存区的版本，新版本，已修改且已暂存的版本  
+  
+## 比较工作区和最新提交的差异  
+```bash  
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)  
+$ git diff HEAD  
+warning: in the working copy of 'test02.txt', LF will be replaced by CRLF the next time Git touches it  
+diff --git a/test01.txt b/test01.txt  
+index cd7fb11..a821b44 100644  
+--- a/test01.txt  
++++ b/test01.txt  
+@@ -4,3 +4,4 @@ local modify test01.txt  
+ A  
+ b  
+ C  
++001  
+diff --git a/test02.txt b/test02.txt  
+index 8de02e1..98bbcac 100644  
+--- a/test02.txt  
++++ b/test02.txt  
+@@ -1,2 +1,3 @@  
+ test02  
+-local git rebase  
+\ No newline at end of file  
++local git rebase002  
++002  
+```  
+  
+工作区中跟踪的文件，已暂存和未暂存的文件和最新提交的差异都能看到。  
+a 表示最新的提交版本，旧版本  
+b 表示工作目录的版本，新版本  
+  
+## 比较当前工作目录中特定文件和最新提交的差异  
+```bash  
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)  
+$ git diff HEAD -- test01.txt  
+diff --git a/test01.txt b/test01.txt  
+index cd7fb11..a821b44 100644  
+--- a/test01.txt  
++++ b/test01.txt  
+@@ -4,3 +4,4 @@ local modify test01.txt  
+ A  
+ b  
+ C  
++001  
+```  
+  
+a 表示最新的提交版本  
+b 表示工作目录的版本  
+指定查看 test01.txt 文件和 HEAD 的差异。  
+  
+## 比较当前工作目录和任意提交的差异  
+```bash  
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)  
+$ git diff 332de10  
+diff --git a/test01.txt b/test01.txt  
+index 4c19859..a821b44 100644  
+--- a/test01.txt  
++++ b/test01.txt  
+@@ -1 +1,7 @@  
+ test01  
++git pull  
++local modify test01.txt  
++A  
++b  
++C  
++001  
+```  
+  
+a 为指定的提交版本  
+b 为当前工作目录，包括未暂存的修改，不包括未跟踪的文件  
+  
+## 比较当前已暂存和任意提交的差异   
+```bash  
+$ git diff 332de10 --cached  
+diff --git a/test01.txt b/test01.txt  
+index 4c19859..a821b44 100644  
+--- a/test01.txt  
++++ b/test01.txt  
+@@ -1 +1,7 @@  
+ test01  
++git pull  
++local modify test01.txt  
++A  
++b  
++C  
++001  
+```  
+  
+a 为指定的提交版本  
+b 为当前工作目录已暂存的文件修改  
+  
+## 比较两个提交  
+```bash  
+git diff <commit1> <commit2>  
+```  
+这个命令比较两个提交之间的差异。顺序不同则结果不同。  
+  
+```bash  
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)  
+$ git diff 332de10 HEAD  
+diff --git a/test01.txt b/test01.txt  
+index 4c19859..cd7fb11 100644  
+--- a/test01.txt  
++++ b/test01.txt  
+@@ -1 +1,6 @@  
+ test01  
++git pull  
++local modify test01.txt  
++A  
++b  
++C  
+```  
+  
+a 为 332de10 提交版本  
+b 为当前分支最新提交。  
+  
+如果调换顺序：  
+```bash  
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)  
+$ git diff HEAD 332de10  
+diff --git a/test01.txt b/test01.txt  
+index cd7fb11..4c19859 100644  
+--- a/test01.txt  
++++ b/test01.txt  
+@@ -1,6 +1 @@  
+ test01  
+-git pull  
+-local modify test01.txt  
+-A  
+-b  
+-C  
+```  
+  
+a 为当前分支最新提交。  
+b 为 332de10 提交版本  
+相当于 332de10 相对于 HEAD 的变化，因此 HEAD 中增加的内容前面为 -，表示需要减去这些内容才能和 a 的版本一致。  
+  
+## 比较当前最新提交和上一次提交的差异  
+```bash  
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (fix_B)  
+$ git diff HEAD^ HEAD  
+diff --git a/test01.txt b/test01.txt  
+index 5c232c3..cd7fb11 100644  
+--- a/test01.txt  
++++ b/test01.txt  
+@@ -2,5 +2,5 @@ test01  
+ git pull  
+ local modify test01.txt  
+ A   
+-B  
++b  
+ C  
+```  
+  
+a 为 HEAD^ 上一次提交版本  
+b 为 HEAD 最新提交版本  
+  
+## 比较两个分支最新提交的差异  
+> [git diff - Comparing Changes in Git | Refine](https://refine.dev/blog/git-diff-command/#git-diff-between-two-branches-two-dots-method)   
+  
+```bash  
+git diff <branch1> <branch2>  
+```  
+或者等价于：  
+```bash  
+git diff <branch1>..<branch2>  
+```  
+  
+这个顺序则 a 为 branch1 版本，b 为 branch2。   
+查看的是两个分支的最新提交的差异。  
+  
+如果调换顺序，则 a 和 b 的版本也调换：  
+```bash  
+git diff <branch2> <branch1>  
+```  
+这个顺序则 a 为 branch2 版本，b 为 branch1。  
+  
+## 比较一个分支相对于另一个分支的差异  
+> [git diff - Comparing Changes in Git | Refine](https://refine.dev/blog/git-diff-command/#git-diff-between-two-branches-three-dots-method)   
+  
+```bash  
+git diff <branch1>...<branch2>  
+```  
+  
+这个命令显示从 `branch1` 和 `branch2` 的共同祖先到 `branch2` 的所有差异。  
+即从两个分支开始分叉后，branch2 上所有的提交内容相对共同祖先的差异。  
+查看差异中 a 为两个分支共同的祖先，b 为 branch2 最新提交。  
+  
+注意和 ```git diff <branch1>..<branch2>``` 的区别，两个点号表示两个分支最新提交的差异。  
+  
+## 查看差异的文件名  
+```bash  
+$ git diff --name-only  
+```  
+  
+## 比较工作目录和 stash 中特定文件差别  
+```bash  
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (main)  
+$ echo "000 modify after stash test01" >> test01.txt  
+  
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (main)  
+$ git diff stash@{0} -- test01.txt  
+warning: in the working copy of 'test01.txt', LF will be replaced by CRLF the next time Git touches it  
+diff --git a/test01.txt b/test01.txt  
+index d494af0..86e607d 100644  
+--- a/test01.txt  
++++ b/test01.txt  
+@@ -4,4 +4,4 @@ local modify test01.txt  
+ A  
+ B  
+ add main test01.txt  
+-stash test01.txt  
++000 modify after stash test01  
+```  
+  
+a 为 stash@{0} 的版本  
+b 为当前工作目录  
+  
+## 比较暂存区和 stash 中特定文件差别  
+```bash  
+lx@LAPTOP-VB238NKA MINGW64 /d/Documents/git_test (main)  
+$ git diff stash@{0} --cached -- test01.txt  
+diff --git a/test01.txt b/test01.txt  
+index d494af0..9d86808 100644  
+--- a/test01.txt  
++++ b/test01.txt  
+@@ -4,4 +4,3 @@ local modify test01.txt  
+ A  
+ B  
+ add main test01.txt  
+-stash test01.txt  
+```  
+  
+a 为 stash@{0}  
+b 为暂存区  
+  
+## 查看当前最新提交和 stash 的差异  
+```bash  
+git diff stash@{0} HEAD  
+```  
+  
+a 为 stash@{0}  
+b 为HEAD  
+  
+## 查看两个分支某个文件的差异  
+```bash  
+git diff <branch1> <branch2> -- <file-path>  
+```  
+  
+要查看两个分支中某个文件夹的差异：  
+```bash  
+git diff <branch1> <branch2> -- <folder-path>  
+```  
+  
 ## 比较标签
 ```bash
 git diff <tag1> <tag2>
@@ -1994,7 +2360,13 @@ $ git log --oneline -5 fix_B  | tac | cut -d" " -f1 | xargs git cherry-pick --no
 ```
 
 ## pick 其他分支的特定提交
-
+  
+pick main2 分支的最新提交：  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test04 (main3)  
+$ git cherry-pick main2  
+```  
+  
 pick main2 分支的第 5 个父提交：
 ```bash
 lx@lx MINGW64 /d/Documents/git_test04 (main3)
