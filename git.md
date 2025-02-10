@@ -168,7 +168,6 @@ $ git status -s |  grep "??" | cut -d" " -f2
 # git date
 > [Dates in Git - Azure Repos](https://learn.microsoft.com/en-us/azure/devops/repos/git/git-dates?view=azure-devops) 
 
-
 ## Author Date
 作者时间是指提交的作者（Author）创建提交时的时间戳。它记录了最初编写代码并创建提交的时间。
 
@@ -695,32 +694,111 @@ $ git log --pretty=format:"%h %s" --graph
 *  11d191e Merge branch 'defunkt' into local
 ```
 
-## 时间限制
-> [Git - Viewing the Commit History](https://git-scm.com/book/en/v2/Git-Basics-Viewing-the-Commit-History#pretty_format) 
+## 根据 Commit Date 筛选日志 
+> [Git - Viewing the Commit History](https://git-scm.com/book/en/v2/Git-Basics-Viewing-the-Commit-History#pretty_format)   
+  
+`--since`和`--until`参数可以用来限制显示特定时间范围内的提交：  
+  
+```bash  
+$ git log --since="2 weeks ago"  
+```  
 
-`--since`和`--until`参数可以用来限制显示特定时间范围内的提交：
+  
+### 绝对时间  
+```bash  
+git log --since="2024-12-01" --until="2024-12-31"  
+git log --since="2024-12-01 00:00:00" --until="2024-12-31 23:59:59"  
+```  
+  
+### 相对时间  
+  
+```bash  
+git log --since="1 week ago"  
+git log --until="yesterday"  
+git log --since="2 days ago"  
+git log --since="1 hour ago"  
+git log --since="1 minute ago"  
+git log --since="2 weeks ago" --until="1 week ago"  
+git log --since="yesterday" --until="today"  
+```  
 
+### 示例
+新建一个提交记录，修改 Author Date 使其和 Commit Date 不同
 ```bash
-$ git log --since="2 weeks ago"
+lx@lx MINGW64 /d/Documents/git_test04 (fix_C)
+$ git commit --date="5 days ago" -m "modify 2.txt, change author date"
+[fix_C 9d7b614] modify 2.txt, change author date
+ Date: Tue Feb 4 22:44:33 2025 +0800
+ 1 file changed, 1 insertion(+)
 ```
 
-### 绝对时间
+查看日志：
 ```bash
-git log --since="2024-12-01" --until="2024-12-31"
-git log --since="2024-12-01 00:00:00" --until="2024-12-31 23:59:59"
+
+lx@lx MINGW64 /d/Documents/git_test04 (fix_C)
+$ git log --pretty=fuller -3
+commit 9d7b614d7f37f3e6fbe29967f8d499e8d736d4d1 (HEAD -> fix_C)
+Author:     lxwcd <15521168075@163.com>
+AuthorDate: Tue Feb 4 22:44:33 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 22:44:33 2025 +0800
+
+    modify 2.txt, change author date
+
+commit b3e36b570b1067a9a3bf6e57fe33589afbfdb31c
+Author:     John <John@163.com>
+AuthorDate: Sun Feb 9 20:46:40 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 20:46:40 2025 +0800
+
+    add files and modify author
+
+commit 69cf6cc13264c001fb2857eb647bf7d116c2cb50
+Author:     lxwcd <15521168075@163.com>
+AuthorDate: Sat Feb 1 21:31:08 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sat Feb 1 21:31:08 2025 +0800
+
+    modify 2.txt
 ```
 
-### 相对时间
+筛选 Commit Date 在 2025 年 2 月 1 日之后的日志，即最新的两个日志，最新的提交 Author Date 不符合，但仍会筛选：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_C)
+$ git log --since="2025-2-2" --pretty=fuller
+commit 9d7b614d7f37f3e6fbe29967f8d499e8d736d4d1 (HEAD -> fix_C)
+Author:     lxwcd <15521168075@163.com>
+AuthorDate: Tue Feb 4 22:44:33 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 22:44:33 2025 +0800
+
+    modify 2.txt, change author date
+
+commit b3e36b570b1067a9a3bf6e57fe33589afbfdb31c
+Author:     John <John@163.com>
+AuthorDate: Sun Feb 9 20:46:40 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 20:46:40 2025 +0800
+
+    add files and modify author
+```
+
+## --top0-order  
+> [Git - git-log Documentation](https://git-scm.com/docs/git-log#Documentation/git-log.txt---topo-order) 
+
+> Show no parents before all of its children are shown, and avoid showing commits on multiple lines of history intermixed.
+
+For example, in a commit history like this:
 
 ```bash
-git log --since="1 week ago"
-git log --until="yesterday"
-git log --since="2 days ago"
-git log --since="1 hour ago"
-git log --since="1 minute ago"
-git log --since="2 weeks ago" --until="1 week ago"
-git log --since="yesterday" --until="today"
+---1----2----4----7
+    \	             \
+     3----5----6----8---
 ```
+
+where the numbers denote the order of commit timestamps, git rev-list and friends with --date-order show the commits in the timestamp order: 8 7 6 5 4 3 2 1.
+
+With --topo-order, they would show 8 6 5 3 7 4 2 1 (or 8 7 4 2 6 5 3 1); some older commits are shown before newer ones in order to avoid showing the commits from two parallel development track mixed together.
 
 ## 作者和关键词搜索
 
@@ -1743,10 +1821,41 @@ git branch --unset-upstream my-branch
 git switch <branch-name>
 ```
 
-## 创建并切换新分支
+## 创建并切换新分支  
+
+### 依据当前分支创建新分支
+```bash  
+git switch -c <new-branch-name>  
+```  
+
+新分支和当前分支一摸一样
+
+### 依据其他分支创建新分支
 ```bash
-git switch -c <new-branch-name>
+git switch -c <新分支名> <来源分支名>
 ```
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_C)
+$ git switch -c dev origin/main
+branch 'dev' set up to track 'origin/main'.
+Switched to a new branch 'dev'
+
+lx@lx MINGW64 /d/Documents/git_test04 (dev)
+$ git branch -vv
+* dev      e190c9a [origin/main] update note
+  fix_B    baddcc2 [origin/fix_B: ahead 1] add files and modify author
+  fix_C    3b634a7 [origin/fix_B: ahead 5, behind 2] modify 1.patch , change author date
+  fix_D    2c28453 modify test01.txt
+  fix_E    1609512 [fix_D: ahead 2] Merge branch 'fix_D' into fix_E
+  main     03d14ae [origin/main: ahead 2, behind 19] update main test01.txt
+  main2    3b671ba [origin/main: ahead 9, behind 19] modify test01.txt , add C
+  main2_01 f537c63 modify test01.txt , add C
+  main3    d228105 [origin/main: ahead 6, behind 19] cherry-pick fix_C and commit manually
+```
+  
+和 `git checkout -b <new-branch> <existing-branch>` 相同功能。
+
 
 ## 强制创建新分支
 ```bash
@@ -1795,42 +1904,249 @@ git add *.cpp *.h
 ```bash
 git add -i
 ```
+  
+# git commit  
+> [Git - git-commit Documentation](https://git-scm.com/docs/git-commit)   
+  
+`git commit` 是 Git 中用于记录更改的命令。它将暂存区中的更改保存到本地仓库的历史记录中。  
+  
+1. **记录更改**：`git commit` 将暂存区中的更改保存为一个新的提交（commit），并记录更改的内容和时间。  
+2. **更新项目历史**：每次提交都会更新项目的提交历史，形成一个版本记录。  
+3. **要求提交信息**：执行提交时，Git 会要求你提供一个提交信息，以描述所做的更改。  
+  
+## 选项  
+  
+- **`-m`**：指定提交信息。  
+- **`-a` 或 `--all`**：自动暂存所有已跟踪文件的更改并提交。  
+- **`--amend`**：修改最后一次提交。这允许你更改最近一次提交的信息或内容。  
+- **`-C <commit>`**：使用指定提交的信息作为当前提交的信息。  
+- **`--dry-run`**：模拟提交操作，显示将要提交的内容，但不实际创建提交。  
+  
+## 指定提交信息 -m  
+```bash  
+git commit -m "Commit message"  
+```  
+使用 `-m` 选项可以直接在命令行中指定提交信息。  
+  
+## 提交所有更改 -am  
+```bash  
+git commit -a -m  
+```  
+使用 `-a` 选项会自动将所有已跟踪文件的更改添加到暂存区并提交，但不包括新文件。  
+  
+## 修改最后一次提交 --amend  
+  
+`git commit --amend` 是一个Git命令，用于修改最近一次提交的信息。  
+  
+- 如果刚刚做了一次提交，然后意识到提交信息有误或者不完整，可以使用 `git commit --amend` 来修改它。  
+- 如果在提交后发现还有一些更改忘记加入，你可以使用 `git commit --amend` 将这些更改加入到上一个提交中。  
+- 如果修改提交内容后不更新提交日志，可以加 `--no-edit` 选项。  
+```bash  
+git commit --amend --no-edit  
+```  
 
-# git commit
+### 不修改 Author Date 但更新 Commit Date
 
-## 指定提交信息 -m
+初始提交记录：
 ```bash
-git commit -m "Commit message"
+lx@lx MINGW64 /d/Documents/git_test04 (main2)
+$ git commit --author="Bob <Bob@163.com>" --date="3 hours ago" -m "modify test01.txt, add 22"
+[main2 13bdace] modify test01.txt, add 22
+ Author: Bob <Bob@163.com>
+ Date: Sun Feb 9 18:58:12 2025 +0800
+ 1 file changed, 1 insertion(+)
 ```
-使用 `-m` 选项可以直接在命令行中指定提交信息。
 
-## 提交所有更改 -am
 ```bash
-git commit -a -m
+lx@lx MINGW64 /d/Documents/git_test04 (main2)
+$ git log --pretty=fuller -1
+commit 13bdace88eb6634b44a7d19dace0622daf7fcf59 (HEAD -> main2)
+Author:     Bob <Bob@163.com>
+AuthorDate: Sun Feb 9 18:58:12 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 21:58:12 2025 +0800
+
+    modify test01.txt, add 22
 ```
-使用 `-a` 选项会自动将所有已跟踪文件的更改添加到暂存区并提交，但不包括新文件。
 
-## 修改最后一次提交 --amend
-
-提交后如果发现有内容想变更，但不想新建提交记录，则可以修改后更新最后一次提交。
-如果修改提交内容后不更新提交日志，可以加 `--no-edit` 选项。
+修改提交记录：
 ```bash
-git commit --amend --no-edit
+lx@lx MINGW64 /d/Documents/git_test04 (main2)
+$ git commit --amend --no-edit
+[main2 0d3ace1] modify test01.txt, add 22
+ Author: Bob <Bob@163.com>
+ Date: Sun Feb 9 18:58:12 2025 +0800
+ 1 file changed, 2 insertions(+)
 ```
 
-最好在未将最后一次提交推送到远程仓库前使用这个命令修改。
-如果已经推送到远程，则修改后需要用 `git push --force` 来更新远程仓库。如果此时远程仓库有其他新的提交，将不会存在，变成和本地一样的提交记录。
-
-## 输入多行提交日志
-利用 here 字符串输入多行日志：
+查看日志发现作者日期没变，但提交日期变了。
 ```bash
-$ git commit -F - <<EOF
-> modify test.md
-> EOF
-[feature c433384cd] modify test.md
- 1 file changed, 1 insertion(+), 1 deletion(-)
+lx@lx MINGW64 /d/Documents/git_test04 (main2)
+$ git log --pretty=fuller -1
+commit 0d3ace1ef1def9863b9523ab1bd682c5ccfd4e1c (HEAD -> main2)
+Author:     Bob <Bob@163.com>
+AuthorDate: Sun Feb 9 18:58:12 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 22:01:53 2025 +0800
+
+    modify test01.txt, add 22
 ```
 
+### --reset-author 重置作者信息
+
+初始提交记录：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main2_01)
+$ git log --pretty=fuller -1
+commit 13bdace88eb6634b44a7d19dace0622daf7fcf59 (HEAD -> main2_01)
+Author:     Bob <Bob@163.com>
+AuthorDate: Sun Feb 9 18:58:12 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 21:58:12 2025 +0800
+
+    modify test01.txt, add 22
+```
+
+修改提交记录，且重置作者信息：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main2_01)
+$ echo "2" >> test01.txt
+
+lx@lx MINGW64 /d/Documents/git_test04 (main2_01)
+$ git add .
+warning: in the working copy of 'test01.txt', LF will be replaced by CRLF the next time Git touches it
+
+lx@lx MINGW64 /d/Documents/git_test04 (main2_01)
+$ git commit --amend --reset-author --no-edit
+[main2_01 d4d8db7] modify test01.txt, add 22
+ 1 file changed, 2 insertions(+)
+```
+
+查看日志发现作者重置为当前用户，作者日期更新为当前日期，提交日期也更新了。
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (main2_01)
+$ git log --pretty=fuller -1
+commit d4d8db752aed39f7256a8ff4f6db5026ad0f7047 (HEAD -> main2_01)
+Author:     lxwcd <15521168075@163.com>
+AuthorDate: Sun Feb 9 22:07:46 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 22:07:46 2025 +0800
+
+    modify test01.txt, add 22
+```
+  
+### 注意事项  
+- **重写历史**：  
+`git commit --amend` 实际上会创建一个新的提交对象，它有一个不同的提交ID。这意味着它会重写项目的历史。  
+如果已经将原始提交推送到了远程仓库，那么使用 `git commit --amend` 后，需要使用 `git push --force` 来更新远程仓库。 使用强制推送最好先查看本地和远程的提交记录，如果本地和远程在 --amend 修改记录前一样，则可以强制推送；如果远程有新的提交记录，则不要强制推送。  
+  
+- **使用场景限制**：  
+`git commit --amend` 只能用于最近的提交。如果你想要修改更早的提交，你需要使用 `git rebase` 命令。  
+  
+## 从文件读取提交日志 -F  
+```bash  
+git commit -F commit_msg.txt  
+```  
+
+## 输入多行提交日志  
+可以直接 git commit，这样会进入一个输入界面，输入多行提交日志。
+
+或者用下面方法：
+
+```bash  
+$ git commit -F - <<EOF  
+> modify test.md  
+> EOF  
+[feature c433384cd] modify test.md  
+ 1 file changed, 1 insertion(+), 1 deletion(-)  
+```  
+  
+- `-F`：这个选项用于指定提交信息的来源。通常 `-F` 后面跟一个文件名，表示从文件中读取提交信息。  
+- `-`：在这里，`-` 表示从标准输入（stdin）读取提交信息。这意味着提交信息将从命令行中直接输入，而不是从文件中读取。  
+- `<<`：这是 here 文档的开始标记。它告诉 shell，接下来的输入将被重定向到命令的标准输入，直到遇到一个特定的结束标记。  
+- `EOF`：这是结束标记（End Of File）。你可以选择任何字符串作为结束标记，但 `EOF` 是最常用的。这里表示输入将一直持续，直到遇到另一个 `EOF`。  
+
+## --author 修改作者信息
+在提交时指定一个不同于当前 Git 配置的作者信息时，可以使用 `--author` 参数。 例如代表别人提交代码时。
+```bash
+--author="<name> <email>"
+```
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_C)
+$ git commit --author="John <John@163.com>" -m "add files and modify author"
+[fix_C b3e36b5] add files and modify author
+ Author: John <John@163.com>
+ 24 files changed, 390 insertions(+)
+```
+
+查看日志，提交者信息不变：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_C)
+$ git log --pretty=fuller -1
+commit b3e36b570b1067a9a3bf6e57fe33589afbfdb31c (HEAD -> fix_C)
+Author:     John <John@163.com>
+AuthorDate: Sun Feb 9 20:46:40 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 20:46:40 2025 +0800
+
+    add files and modify author
+```
+
+作者时间（Author Date） 和 提交者时间（Committer Date） 都是当前时间。
+作者信息（Author Name 和 Author Email） 是你指定的 John Doe <john.doe@example.com>。
+提交者信息（Committer Name 和 Committer Email） 是当前的 Git 配置。
+
+
+## --date 修改 Author Date
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D)
+$ date
+2025年02月 9日 21:17:02
+```
+
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D)
+$ git commit --date="2025-01-02 14:00:00" -m "Fix bug" --author="Alice <ALice@163.com>"
+[fix_D 91b0e3c] Fix bug
+ Author: Alice <ALice@163.com>
+ Date: Thu Jan 2 14:00:00 2025 +0800
+ 1 file changed, 1 insertion(+)
+```
+
+查看日志，Author Date 被修改为指定时间，但 commit date 为当前时间。
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D)
+$ git log --pretty=fuller -1
+commit 91b0e3c6432ccf89a9809c087fe933bf05c6966e (HEAD -> fix_D)
+Author:     Alice <ALice@163.com>
+AuthorDate: Thu Jan 2 14:00:00 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 21:17:51 2025 +0800
+
+    Fix bug
+```
+
+## --reset-author 重置提交作者信息
+> When used with -C/-c/--amend options, or when committing after a conflicting cherry-pick, declare that the authorship of the resulting commit now belongs to the committer. This also renews the author timestamp.
+  
+### git commit --amend --reset-author 重置提交作者信息
+
+`git commit --amend` 不会修改作者信息
+
+但加上 `--reset-author` 作者重置为当前用户，作者日期更新为当前日期，提交日期也更新为当前时间。
+
+### git cherry-pick 解决冲突后不修改 Author Date
+
+## 处理错误的提交  
+> [Git Guides - git commit](https://github.com/git-guides/git-commit#what-can-go-wrong-while-changing-history)   
+  
+- `git revert`是更改历史记录的最安全方式。它不会删除现有提交，而是在新提交中应用特定提交引入变化的逆操作。  
+- `git reset`是一个强大的命令，可以移动HEAD指针和分支指针到另一个时间点，但可能会导致工作丢失。在使用`git reset`之前，确保与团队沟通，并了解三种类型的重置（--soft, --mixed, --hard）。  
+- `git reflog`是一个记录HEAD指向的每个提交的日志。如果你在使用`git reset`时无意中丢失了提交，可以使用`git reflog`找到并访问它们。  
+- `git commit --amend`只更改当前分支上的最近一次提交。  
+这个命令对于尚未推送到远程的提交、提交信息中有拼写错误或者提交中未包含预期更改的情况非常有用。  
+  
 # git rm 删除文件
 
 ## 删除文件
@@ -2322,44 +2638,396 @@ git pull --ff-only origin master
 git pull --no-commit origin master
 ```
 
-# git rebase
-> [Git - Rebasing](https://git-scm.com/book/en/v2/Git-Branching-Rebasing) 
+# git rebase  
+> [git rebase | Atlassian Git Tutorial](https://www.atlassian.com/git/tutorials/rewriting-history/git-rebase)   
+> [Git - Rebasing](https://git-scm.com/book/en/v2/Git-Branching-Rebasing)   
+> [git rebase - Why, When & How to fix conflicts](https://www.youtube.com/watch?v=DkWDHzmMvyg&ab_channel=Philomatics)   
+> [Git Rebase --interactive: EXPLAINED](https://www.youtube.com/watch?v=H7RFt0Pxxp8&ab_channel=DevOpsToolbox)   
 
-# git cherry-pick
-> [Git - git-cherry-pick Documentation](https://git-scm.com/docs/git-cherry-pick) 
+git rebase 会修改提交历史记录。
+如果当前为 bug 分支，修改完后将 bug 分支合并到 main 分支，且 bug 分支只自己适用，合并完后不需要，可以尝试用 git rebase 进行合并，如果当前 bug 分支已经落后 main 分支很多，可以避免直接用 git merge 导致提交历史产生很长的分叉。
 
-> Apply the changes introduced by some existing commits.
+git rebase 的行为和 git cherry-pick 的效果相同，如果合并过程中有冲突，需要停下来修改冲突，因此会修改过去某个提交内容，如果不希望这样，则应该换其他合并方式，用 git rebase --abort 取消合并。
+如果修改的提交是自己的提交记录，则可以继续用 rebase 合并。
 
-默认会 pick 提交到当前分支且新增一个同样的提交记录，除了 hash 值不一样，其他都一样。
+进行合并前最好先复制当前分支来创建一个新分支操作。
 
-如果 Pick 多个提交，且顺序相关，最好按照原来的顺序从旧往前 pick：
+## 合并有冲突解决示例
 
+要将 fix_D 分支和 fix_C 分支合并，利用 rebase。
+
+### 查看两个分支差异
 ```bash
-lx@lx MINGW64 /d/Documents/git_test03 (test)
-$ git log --oneline -5 fix_B
-3030efb (fix_B) Merge branch 'fix_B' of https://github.com/lxwcd/git_test into fix_B
-3c20c79 update git.md
-171d25c update 2.txt 22
-f54dd26 update 2.txt 222
-15f80f2 (HEAD -> test, origin/test) update test02.txt
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D)
+$ git branch -vv | grep "*"
+* fix_D      2c28453 [fix_C: ahead 3, behind 4] modify test01.txt
 ```
 
-想 pick 上面 5 个提交，且按照原始的顺序：
+可见当前分支落后待合并分支 4 提交记录，超前待合并分支 3 提交记录。
 
-```bash
-lx@lx MINGW64 /d/Documents/git_test03 (test)
-$ git log --oneline -5 fix_B  | tac | cut -d" " -f1
-15f80f2
-f54dd26
-171d25c
-3c20c79
-3030efb
+进行 rebase 操作，则类似切换到 fix_C 分支，然后根据提交顺序将超前的三个提交从旧的提交开始依次 git cherry-pick 应用到 fix_C 分支。
 
-lx@lx MINGW64 /d/Documents/git_test03 (test)
-$ git log --oneline -5 fix_B  | tac | cut -d" " -f1 | xargs git cherry-pick --no-commit
+查看超前的 3 个提交：
+```cpp
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D)
+$ git log fix_C..HEAD --oneline
+2c28453 (HEAD -> fix_D) modify test01.txt
+0cda0f6 modify 2.txt
+91b0e3c Fix bug
 ```
 
-## pick 其他分支的特定提交
+### git rebase 合并
+进行 rebase 操作，可以看到第一个在 fix_C 分支基础上应用 `91b0e3c Fix bug` 这个提交，且发生冲突：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D)
+$ git rebase fix_C --verbose
+Changes from b3e36b570b1067a9a3bf6e57fe33589afbfdb31c to 09cfa3587677d6bed88232919dcd356ad513c7fe:
+ 1.patch | 1 +
+ 2.txt   | 2 ++
+ 2 files changed, 3 insertions(+)
+Rebasing (1/3)
+Auto-merging 2.txt
+CONFLICT (content): Merge conflict in 2.txt
+error: could not apply 91b0e3c... Fix bug
+hint: Resolve all conflicts manually, mark them as resolved with
+hint: "git add/rm <conflicted_files>", then run "git rebase --continue".
+hint: You can instead skip this commit: run "git rebase --skip".
+hint: To abort and get back to the state before "git rebase", run "git rebase --abort".
+hint: Disable this message with "git config advice.mergeConflict false"
+Could not apply 91b0e3c... Fix bug
+
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D|REBASE 1/3)
+$
+```
+
+可见 2.txt 文件冲突，可以用 git status 看到：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D|REBASE 1/3)
+$ git status
+interactive rebase in progress; onto 09cfa35
+Last command done (1 command done):
+   pick 91b0e3c Fix bug
+Next commands to do (2 remaining commands):
+   pick 0cda0f6 modify 2.txt
+   pick 2c28453 modify test01.txt
+  (use "git rebase --edit-todo" to view and edit)
+You are currently rebasing branch 'fix_D' on '09cfa35'.
+  (fix conflicts and then run "git rebase --continue")
+  (use "git rebase --skip" to skip this patch)
+  (use "git rebase --abort" to check out the original branch)
+
+Unmerged paths:
+  (use "git restore --staged <file>..." to unstage)
+  (use "git add <file>..." to mark resolution)
+        both modified:   2.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+### 解决冲突
+根据实际需求，和提示的冲突文件名：
+
+- 如果是普通文本文件，可以进入文件，在每个冲突的地方解决。
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D|REBASE 1/3)
+$ cat 2.txt
+222
+fix_c
+<<<<<<< HEAD
+3
+1
+=======
+111
+>>>>>>> 91b0e3c (Fix bug)
+```
+- 可以 `git checkout --ours 2.txt` 或者 `git checkout --theirs 2.txt` 直接指定使用自己或者对方版本
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D|REBASE 1/3)
+$ git checkout --theirs 2.txt
+Updated 1 path from the index
+
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D|REBASE 1/3)
+$ cat 2.txt
+222
+fix_c
+111
+```
+
+### git add 添加解决完冲突的文件
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D|REBASE 1/3)
+$ git add .
+
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D|REBASE 1/3)
+$ git status
+interactive rebase in progress; onto 09cfa35
+Last command done (1 command done):
+   pick 91b0e3c Fix bug
+Next commands to do (2 remaining commands):
+   pick 0cda0f6 modify 2.txt
+   pick 2c28453 modify test01.txt
+  (use "git rebase --edit-todo" to view and edit)
+You are currently rebasing branch 'fix_D' on '09cfa35'.
+  (all conflicts fixed: run "git rebase --continue")
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        modified:   2.txt
+```
+
+根据提示，第一个提交应用完成，接着会继续应用剩下两个提交。
+
+### 继续合并
+因为解决冲突从而修改了原始提交的内容，如果希望该提交信息仍保持和原始提交一致，则用 git rebase --continue，这样相当于对原始的提交 'fix_D' on '09cfa35' 进行了修改，类似用 git commit --amend，如果该提交是自己的提交，不介意修改了提交的内容，则可以用该方法。这样 Author Date 和 Author Name 不变，Commit Date 和 Commit Name 会变成当前时间和自己。
+因此，如果修改的提交记录原始 Author 不是自己，则最好不用这种方法，以免修改其他人的提交记录。
+
+如果希望修改这个提交记录的 Author Date，则自己手动提交。
+
+#### git rebase --continue 继续合并
+Author Name 和 Author Date 还是显示原始的作者和日期，但 Commit Name 和 Commit Date 是自己和当前时间。
+
+#### git commit 重新创建提交
+
+如果应用的提交 Author 不是自己，这样会修改 Author 的信息，最后显示 Author 变成自己，Author Date 更新为当前时间。
+提交后还是需要 git rebase --continue 继续合并。
+
+旧提交记录：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D|REBASE 1/3)
+$ git show --pretty=fuller 91b0e3c
+commit 91b0e3c6432ccf89a9809c087fe933bf05c6966e
+Author:     Alice <ALice@163.com>
+AuthorDate: Thu Jan 2 14:00:00 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 21:17:51 2025 +0800
+
+    Fix bug
+
+diff --git a/2.txt b/2.txt
+index e36953d..6ea0285 100644
+--- a/2.txt
++++ b/2.txt
+@@ -1,2 +1,3 @@
+ 222
+ fix_c
++111
+```
+
+重新提交该记录后 Author 变成自己：
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D|REBASE 1/3)
+$ git commit -m "rebase 91b0e3c Fix bug and fix confict"
+[detached HEAD 01c7623] rebase 91b0e3c Fix bug and fix confict
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D|REBASE 1/3)
+$ git log --pretty=fuller -1
+commit 01c762391a07d2a8bb82e27d0b83de5fd567aa27 (HEAD)
+Author:     lxwcd <15521168075@163.com>
+AuthorDate: Mon Feb 10 00:13:44 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Mon Feb 10 00:13:44 2025 +0800
+
+    rebase 91b0e3c Fix bug and fix confict
+```
+
+## git rebase -i 交互变基
+```bash
+pick 91b0e3c Fix bug
+pick 0cda0f6 modify 2.txt
+pick 2c28453 modify test01.txt
+
+# Rebase 09cfa35..2c28453 onto 09cfa35 (3 commands)
+#
+# Commands:
+# p, pick <commit> = use commit
+# r, reword <commit> = use commit, but edit the commit message
+# e, edit <commit> = use commit, but stop for amending
+# s, squash <commit> = use commit, but meld into previous commit
+# f, fixup [-C | -c] <commit> = like "squash" but keep only the previous
+#                    commit's log message, unless -C is used, in which case
+#                    keep only this commit's message; -c is same as -C but
+#                    opens the editor
+# x, exec <command> = run command (the rest of the line) using shell
+# b, break = stop here (continue rebase later with 'git rebase --continue')
+# d, drop <commit> = remove commit
+# l, label <label> = label current HEAD with a name
+# t, reset <label> = reset HEAD to a label
+# m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+#         create a merge commit using the original merge commit's
+#         message (or the oneline, if no original merge commit was
+#         specified); use -c <commit> to reword the commit message
+# u, update-ref <ref> = track a placeholder for the <ref> to be updated
+#                       to this position in the new commits. The <ref> is
+#                       updated at the end of the rebase
+#
+# These lines can be re-ordered; they are executed from top to bottom.
+#
+# If you remove a line here THAT COMMIT WILL BE LOST.
+#
+# However, if you remove everything, the rebase will be aborted.
+#
+```
+
+可以修改 rebase 的顺序等。
+
+### p, pick <commit>
+使用指定的提交，不做任何修改。
+默认行为。
+
+### r, reword <commit>
+作用：使用指定的提交，但能编辑提交日志的 message。
+```bash
+pick 1fc6c95 Patch A
+reword 6b2481b Patch B
+```
+
+保存并退出后，Git 会暂停在 6b2481b 提交，编辑提交日志的 message。
+
+### e, edit <commit>
+使用指定的提交，但在应用后暂停，允许进行修改提交内容和日志 message。
+```bash
+reword 67bcef2 modify 2.txt
+edit 6f95c1c modify test01.txt
+```
+保存并退出后，Git 会暂停在 6f95c1c 提交，可以使用 git commit --amend 修改提交内容。
+```bash
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D_03|REBASE 3/3)
+$ git status
+interactive rebase in progress; onto 09cfa35
+Last commands done (3 commands done):
+   reword 67bcef2 modify 2.txt
+   edit 6f95c1c modify test01.txt
+  (see more in file .git/rebase-merge/done)
+No commands remaining.
+You are currently editing a commit while rebasing branch 'fix_D_03' on '09cfa35'.
+  (use "git commit --amend" to amend the current commit)
+  (use "git rebase --continue" once you are satisfied with your changes)
+
+nothing to commit, working tree clean
+
+lx@lx MINGW64 /d/Documents/git_test04 (fix_D_03|REBASE 3/3)
+$
+```
+
+### s, squash <commit>
+将指定的提交合并到前一个提交中。
+
+```bash
+pick 01c7623 rebase 91b0e3c Fix bug and fix confict
+pick 67bcef2 modify 2.txt
+squash 6f95c1c modify test01.txt
+```
+
+当合并 `67bcef2` 时会进入一个编辑界面，将 `6f95c1c` 提交一起合并到 `67bcef2` 中：
+```Bash
+# This is a combination of 2 commits.
+# This is the 1st commit message:
+
+modify 2.txt
+
+# This is the commit message #2:
+
+modify test01.txt
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Date:   Sun Feb 9 21:25:57 2025 +0800
+#
+# interactive rebase in progress; onto 09cfa35
+# Last commands done (3 commands done):
+#    pick 67bcef2 modify 2.txt
+#    squash 6f95c1c modify test01.txt
+# No commands remaining.
+# You are currently rebasing branch 'fix_D_03' on '09cfa35'.
+#
+# Changes to be committed:
+#	modified:   2.txt
+#	modified:   test01.txt
+#
+```
+
+### f, fixup [-C | -c] <commit>
+将指定的提交合并到前一个提交中，但不保留当前提交的消息。
+
+```bash
+pick 01c7623 rebase 91b0e3c Fix bug and fix confict
+pick 67bcef2 modify 2.txt
+fixup 6f95c1c modify test01.txt
+```
+
+保存并退出后，Git 会将 `6f95c1c` 的内容合并到 `67bcef2` 中，但不会提示编辑提交消息。
+最后查看日志看到最后两个提交记录的 message 为倒数第二个日志的提交 message。且 Author 信息更新。
+
+### x, exec <command>
+在指定的提交之后运行一个 shell 命令。
+
+```bash
+pick 1fc6c95 Patch A
+exec echo "Running a command"
+```
+
+保存并退出后，Git 会在应用 1fc6c95 提交后运行 echo "Running a command"。
+
+### b, break
+在指定的提交之后暂停，允许手动处理。
+
+```bash
+pick 1fc6c95 Patch A
+break
+```
+
+保存并退出后，Git 会在应用 1fc6c95 提交后暂停，可以手动处理（如 git commit --amend）。
+
+### d, drop commit
+删除指定的提交。
+
+```bash
+pick 1fc6c95 Patch A
+drop 6b2481b Patch B
+```
+
+保存并退出后，Git 会删除 6b2481b 提交。
+
+### git rebase --edit-todo 修改合并的顺序等
+和 git rebase -i 相似，修改合并信息。
+
+# git cherry-pick  
+> [Git - git-cherry-pick Documentation](https://git-scm.com/docs/git-cherry-pick)   
+  
+> Apply the changes introduced by some existing commits.  
+  
+默认会 pick 提交到当前分支且新增一个同样的提交记录，除了 hash 值不一样，其他都一样。  
+  
+如果 Pick 多个提交，且顺序相关，最好按照原来的顺序从旧往前 pick：  
+  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test03 (test)  
+$ git log --oneline -5 fix_B  
+3030efb (fix_B) Merge branch 'fix_B' of https://github.com/lxwcd/git_test into fix_B  
+3c20c79 update git.md  
+171d25c update 2.txt 22  
+f54dd26 update 2.txt 222  
+15f80f2 (HEAD -> test, origin/test) update test02.txt  
+```  
+  
+想 pick 上面 5 个提交，且按照原始的顺序：  
+  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test03 (test)  
+$ git log --oneline -5 fix_B  | tac | cut -d" " -f1  
+15f80f2  
+f54dd26  
+171d25c  
+3c20c79  
+3030efb  
+  
+lx@lx MINGW64 /d/Documents/git_test03 (test)  
+$ git log --oneline -5 fix_B  | tac | cut -d" " -f1 | xargs git cherry-pick --no-commit  
+```  
+  
+## pick 其他分支的特定提交  
   
 pick main2 分支的最新提交：  
 ```bash  
@@ -2367,122 +3035,286 @@ lx@lx MINGW64 /d/Documents/git_test04 (main3)
 $ git cherry-pick main2  
 ```  
   
-pick main2 分支的第 5 个父提交：
+pick main2 分支的第 5 个父提交：  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test04 (main3)  
+$ git cherry-pick main2~5  
+```  
+  
+## 不产生提交记录 --no-commit  
+  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test03 (test)  
+$ git log --oneline -1 main  
+cbf4932 (main) update test03.txt  
+  
+lx@lx MINGW64 /d/Documents/git_test03 (test)  
+$ git log --oneline -1 main | cut -d" " -f1  
+cbf4932  
+  
+lx@lx MINGW64 /d/Documents/git_test03 (test)  
+$ git log --oneline -1 main | cut -d" " -f1  | xargs git cherry-pick --no-commit  
+```  
+  
+修改会在暂存区，不产生提交记录。  
+  
+## pick 本分支落后其他分支的提交  
+  
+本分支当前的记录：  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test04 (main2)  
+$ git log --oneline -6 origin/main  
+03d14ae (origin/main, origin/HEAD, main) update main test01.txt  
+737c5b7 commit B  
+e67a0f3 add test02.txt and test03.txt  
+332de10 update file  
+470dcf0 add files  
+```  
+  
+查看本分支落后 main2 分支的记录：  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test04 (main3)  
+$ git log ^HEAD main2 --oneline  
+a47ac74 (main2) Revert "update main test01.txt"  
+ca44b51 Revert "update test01.txt: add main"  
+006fed4 Reapply "update test01.txt: add main"  
+b93b033 Revert "add test02.txt and test03.txt"  
+dc76ad7 Revert "update test01.txt: add main"  
+16ac277 update test01.txt: add main  
+```  
+  
+应用落后的这些提交，按照原始顺序：  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test04 (main3)  
+$ git cherry-pick ..main2  
+```  
+或者：  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test04 (main3)  
+$ git cherry-pick ^HEAD main2  
+```  
+  
+查看新的提交，看到最新的 6 次提交即为 pick 的提交，仅 hash 值不同，message 相同：  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test04 (main3)  
+$ git log --oneline -8  
+784d0df (HEAD -> main3) Revert "update main test01.txt"  
+c36999f Revert "update test01.txt: add main"  
+2b1c993 Reapply "update test01.txt: add main"  
+afd6228 Revert "add test02.txt and test03.txt"  
+ed7571e Revert "update test01.txt: add main"  
+3a37c60 update test01.txt: add main  
+03d14ae (origin/main, origin/HEAD, main) update main test01.txt  
+737c5b7 commit B  
+```  
+  
+## pick 其他分支连续的提交  
+  
+pick main2 分支从第 5 个父提交到第 3 个父提交：  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test04 (main3)  
+$ git cherry-pick main2~6..main2~3  
+```  
+  
+这里不包括起始提交 main2~6。   
+  
+main2 分支提交记录：  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test04 (main3)  
+$ git log --oneline -7 main2  
+a47ac74 (main2) Revert "update main test01.txt"  
+ca44b51 Revert "update test01.txt: add main"  
+006fed4 Reapply "update test01.txt: add main"  
+b93b033 Revert "add test02.txt and test03.txt"  
+dc76ad7 Revert "update test01.txt: add main"  
+16ac277 update test01.txt: add main  
+03d14ae (HEAD -> main3, origin/main, origin/HEAD, main) update main test01.txt  
+```  
+  
+本分支初始提交记录：  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test04 (main3)  
+$ git log --oneline -3  
+03d14ae (HEAD -> main3, origin/main, origin/HEAD, main) update main test01.txt  
+737c5b7 commit B  
+e67a0f3 add test02.txt and test03.txt  
+```  
+  
+本分支合并后的提交记录：  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test04 (main3)  
+$ git log --oneline -5  
+ee19c9a (HEAD -> main3) Revert "add test02.txt and test03.txt"  
+11df87e Revert "update test01.txt: add main"  
+396ebec update test01.txt: add main  
+03d14ae (origin/main, origin/HEAD, main) update main test01.txt  
+737c5b7 commit B  
+```  
+  
+## 解决冲突
+git cherry-pick 解决冲突后不修改 Author Date。
+
+`git cherry-pick` 如果有冲突，根据提示和 git status 查看的状态打开冲突文件解决冲突。
 ```bash
-lx@lx MINGW64 /d/Documents/git_test04 (main3)
-$ git cherry-pick main2~5
+lx@lx MINGW64 /d/Documents/git_test04 (main2_01)
+$ git cherry-pick main2
+Auto-merging test01.txt
+CONFLICT (content): Merge conflict in test01.txt
+error: could not apply 3b671ba... modify test01.txt , add C
+hint: After resolving the conflicts, mark them with
+hint: "git add/rm <pathspec>", then run
+hint: "git cherry-pick --continue".
+hint: You can instead skip this commit with "git cherry-pick --skip".
+hint: To abort and get back to the state before "git cherry-pick",
+hint: run "git cherry-pick --abort".
+hint: Disable this message with "git config advice.mergeConflict false"
 ```
 
-## 不产生提交记录 --no-commit
-
 ```bash
-lx@lx MINGW64 /d/Documents/git_test03 (test)
-$ git log --oneline -1 main
-cbf4932 (main) update test03.txt
+lx@lx MINGW64 /d/Documents/git_test04 (main2_01|CHERRY-PICKING)
+$ git status
+On branch main2_01
+You are currently cherry-picking commit 3b671ba.
+  (fix conflicts and run "git cherry-pick --continue")
+  (use "git cherry-pick --skip" to skip this patch)
+  (use "git cherry-pick --abort" to cancel the cherry-pick operation)
 
-lx@lx MINGW64 /d/Documents/git_test03 (test)
-$ git log --oneline -1 main | cut -d" " -f1
-cbf4932
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+        both modified:   test01.txt
 
-lx@lx MINGW64 /d/Documents/git_test03 (test)
-$ git log --oneline -1 main | cut -d" " -f1  | xargs git cherry-pick --no-commit
+no changes added to commit (use "git add" and/or "git commit -a")
 ```
 
-修改会在暂存区，不产生提交记录。
-
-## pick 本分支落后其他分支的提交
-
-本分支当前的记录：
+解决冲突后 `git add` 将文件添加到暂存区，然后 `git cherry-pick --continue` 继续执行 cherry-pick 操作，这时会打开窗口写提交日志信息，默认显示原始的日志，可以直接使用或者修改日志 message：
 ```bash
-lx@lx MINGW64 /d/Documents/git_test04 (main2)
-$ git log --oneline -6 origin/main
-03d14ae (origin/main, origin/HEAD, main) update main test01.txt
-737c5b7 commit B
-e67a0f3 add test02.txt and test03.txt
-332de10 update file
-470dcf0 add files
+modify test01.txt , add C
+
+# Conflicts:
+#	test01.txt
+#
+# It looks like you may be committing a cherry-pick.
+# If this is not correct, please run
+#	git update-ref -d CHERRY_PICK_HEAD
+# and try again.
+
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Author:    Bob <Bob@163.com>
+# Date:      Sun Feb 9 18:58:12 2025 +0800
+#
+# On branch main2_01
+# You are currently cherry-picking commit 3b671ba.
+#
+# Changes to be committed:
+#	modified:   test01.txt
+#
 ```
 
-查看本分支落后 main2 分支的记录：
+完成后查看日志发现 Author Date 没有被修改，但 Commit Date 更新为当前时间：
 ```bash
-lx@lx MINGW64 /d/Documents/git_test04 (main3)
-$ git log ^HEAD main2 --oneline
-a47ac74 (main2) Revert "update main test01.txt"
-ca44b51 Revert "update test01.txt: add main"
-006fed4 Reapply "update test01.txt: add main"
-b93b033 Revert "add test02.txt and test03.txt"
-dc76ad7 Revert "update test01.txt: add main"
-16ac277 update test01.txt: add main
+lx@lx MINGW64 /d/Documents/git_test04 (main2_01)
+$ git log --pretty=fuller -1
+commit f537c63676cc209de5bdcd1b79ba79234c7d1552 (HEAD -> main2_01)
+Author:     Bob <Bob@163.com>
+AuthorDate: Sun Feb 9 18:58:12 2025 +0800
+Commit:     lxwcd <15521168075@163.com>
+CommitDate: Sun Feb 9 22:32:24 2025 +0800
+
+    modify test01.txt , add C
 ```
 
-应用落后的这些提交，按照原始顺序：
-```bash
-lx@lx MINGW64 /d/Documents/git_test04 (main3)
-$ git cherry-pick ..main2
-```
-或者：
-```bash
-lx@lx MINGW64 /d/Documents/git_test04 (main3)
-$ git cherry-pick ^HEAD main2
-```
+# git merge  
+> [Git - git-merge Documentation](https://git-scm.com/docs/git-merge)   
+  
+## --no-commit  
+> [Git - git-merge Documentation](https://git-scm.com/docs/git-merge#Documentation/git-merge.txt---no-commit)   
 
-查看新的提交，看到最新的 6 次提交即为 pick 的提交，仅 hash 值不同，message 相同：
-```bash
-lx@lx MINGW64 /d/Documents/git_test04 (main3)
-$ git log --oneline -8
-784d0df (HEAD -> main3) Revert "update main test01.txt"
-c36999f Revert "update test01.txt: add main"
-2b1c993 Reapply "update test01.txt: add main"
-afd6228 Revert "add test02.txt and test03.txt"
-ed7571e Revert "update test01.txt: add main"
-3a37c60 update test01.txt: add main
-03d14ae (origin/main, origin/HEAD, main) update main test01.txt
-737c5b7 commit B
-```
-
-## pick 其他分支连续的提交
-
-pick main2 分支从第 5 个父提交到第 3 个父提交：
-```bash
-lx@lx MINGW64 /d/Documents/git_test04 (main3)
-$ git cherry-pick main2~6..main2~3
-```
-
-这里不包括起始提交 main2~6。 
-
-main2 分支提交记录：
-```bash
-lx@lx MINGW64 /d/Documents/git_test04 (main3)
-$ git log --oneline -7 main2
-a47ac74 (main2) Revert "update main test01.txt"
-ca44b51 Revert "update test01.txt: add main"
-006fed4 Reapply "update test01.txt: add main"
-b93b033 Revert "add test02.txt and test03.txt"
-dc76ad7 Revert "update test01.txt: add main"
-16ac277 update test01.txt: add main
-03d14ae (HEAD -> main3, origin/main, origin/HEAD, main) update main test01.txt
-```
-
-本分支初始提交记录：
-```bash
-lx@lx MINGW64 /d/Documents/git_test04 (main3)
-$ git log --oneline -3
-03d14ae (HEAD -> main3, origin/main, origin/HEAD, main) update main test01.txt
-737c5b7 commit B
-e67a0f3 add test02.txt and test03.txt
-```
-
-本分支合并后的提交记录：
-```bash
-lx@lx MINGW64 /d/Documents/git_test04 (main3)
-$ git log --oneline -5
-ee19c9a (HEAD -> main3) Revert "add test02.txt and test03.txt"
-11df87e Revert "update test01.txt: add main"
-396ebec update test01.txt: add main
-03d14ae (origin/main, origin/HEAD, main) update main test01.txt
-737c5b7 commit B
-```
-
+不自动提交
+  
+## --ff 快速前进（fast-forward）  
+> [Git Merge | Atlassian Git Tutorial](https://www.atlassian.com/git/tutorials/using-branches/git-merge)   
+> [Git Fast-Forward VS Non-Fast-Forward](https://leimao.github.io/blog/Git-Fast-Forward-VS-Non-Fast-Forward/)   
+  
+> A Fast-Forward merge occurs when the branch you are merging into (often main or master) has not diverged from the branch you are merging (often a feature branch). In other words, the commit history of the target branch is a strict subset of the branch being merged. In a Fast-Forward merge, Git simply moves the pointer of the target branch forward to the latest commit on the branch being merged. No new merge commit is created; the history is linear.  
+  
+> A Non-Fast-Forward (No-FF) merge happens when the target branch has diverged from the branch being merged or when you explicitly choose to create a merge commit. In this case, Git creates a new commit that represents the merging of the two branches. Git creates a new merge commit that has two parent commits: one from the target branch and one from the branch being merged. The merge commit is a snapshot of the merged work, preserving the history of both branches.  
+  
+- **快速前进（fast-forward）**：当本地分支落后于远程分支且本地分支没有超前远程分支时，Git 可以安全地将本地分支的指针向前移动到远程分支的最新提交，即为快速前进。这种情况下，没有新的合并提交产生，因为历史是线性的。  
+- **非快速前进**：如果远程分支有新的提交分叉，你的本地分支不是远程分支的直接祖先，那么 Git 无法通过快速前进来更新本地分支。这时，Git 需要创建一个新的合并提交，将两个分支的历史合并在一起。  
+  
+git fast-forward（快进合并）主要适用于本地分支落后于待合并分支，并且没有超前的部分。  
+它要求合并的分支历史是线性的，即待合并的分支的提交历史是当前分支的直接延续。  
+  
+**条件**：  
+**线性历史**：待合并的分支的提交历史是当前分支的直接延续。  
+**没有新的本地提交**：当前分支没有新的提交，或者当前分支的提交历史完全包含在待合并的分支中。  
+  
+```bash  
+A -- B -- C [main]  
+          \  
+           D -- E [feature]  
+```  
+在这个场景中，feature 分支是从 main 分支的 B 提交处创建的，并且 main 分支没有新的提交。此时，feature 分支的提交历史是 main 分支的直接延续。可以执行fast-forward 合并。  
+bash复制  
+```bash  
+git checkout main  
+git merge feature --ff-only  
+```  
+  
+Git 会采用 fast-forward 策略，结果如下：  
+```bash  
+A -- B -- C -- D -- E [main, feature]  
+```  
+  
+main 分支的指针直接移动到 feature 分支的最新提交 E 上。  
+没有创建新的合并提交，历史保持线性。  
+  
+如果本地比待合并分支有新的提交：  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test04 (fix_C)  
+$ git branch -vv  
+  fix_B a3df94d [origin/fix_B] Merge branch 'fix_B' of https://github.com/lxwcd/git_test into fix_B  
+* fix_C 69cf6cc [origin/fix_B: ahead 1, behind 2] modify 2.txt  
+  main  03d14ae [origin/main: ahead 2, behind 19] update main test01.txt  
+  main2 a47ac74 [origin/main: ahead 8, behind 19] Revert "update main test01.txt"  
+  main3 ee19c9a [origin/main: ahead 5, behind 19] Revert "add test02.txt and test03.txt"  
+```  
+  
+执行 fast-forward 合并将失败。  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test04 (fix_C)  
+$ git merge origin/fix_B --ff-only  
+hint: Diverging branches can't be fast-forwarded, you need to either:  
+hint:  
+hint:   git merge --no-ff  
+hint:  
+hint: or:  
+hint:  
+hint:   git rebase  
+hint:  
+hint: Disable this message with "git config advice.diverging false"  
+fatal: Not possible to fast-forward, aborting.  
+```  
+  
+## --squash 合并多个提交记录为一个提交记录  
+git merge --squash 的主要作用是将一个分支上的所有提交合并为一个单独的提交，并将这些更改应用到当前分支上。它不会创建合并提交，而是将所有更改暂存为一次新的提交。这常用于清理历史记录，将多个提交合并为一个。  
+  
+```bash  
+git merge --squash feature  
+```  
+这会将 feature 分支上的所有更改合并到当前分支，但不会自动创建一个新的提交。  
+  
+```bash  
+git commit -m "Squash commit: Merge feature branch changes"  
+```  
+  
+## --abort  
+  
+## --continue  
+  
 # Undo things
 
 ## 修改本地的最新提交 git commit --amend
@@ -2609,219 +3441,296 @@ e43f274 Merge branch 'branch01'
 
 撤销后可以用 `git push` 推送到远程仓库。
 
-# 常用案例
+# 常用案例  
+  
+## git fetch -p 更新远程信息
+从远程仓库获取最新的分支和标签信息，并且会自动清理本地仓库中那些在远程仓库中已经被删除的远程跟踪分支。
 
-## git add 筛选特定文件
+## git add 筛选特定文件  
+  
+```bash  
+git add *.cpp *.h  
+```  
+  
+## 复制当前分支
 
-```bash
-git add *.cpp *.h
-```
-
-## 显示已跟踪被修改的文件名
-```bash
-git diff HEAD --name-only
-```
-
-## 筛选已跟踪被修改的文件
-
-```bash
-git diff HEAD --name-only | grep -E "*/demo/*"
-```
-或：
-```bash
-git status --porcelain | cut -d" " -f3- | grep -E "*/demo/*"
-```
-
-## 筛选已跟踪被修改的特定后缀文件
+如果当前分支需要执行一些合并等操作，不确定操作后行为是否有问题，可以依据当前分支创建一个临时分支，在临时分支进行操作，这样不会影响当前分支：
 
 ```bash
-git diff HEAD --name-only |  grep -E "\.(cpp|h)$"
-```
-或：
-```bash
-git status --porcelain | cut -d" " -f3- |  grep -E "\.(cpp|h)$"
+git switch -c <新分支名> 
 ```
 
-## git stash 过滤文件保存
+注意先保证当前分支工作区干净，如果有未暂存的修改，不希望提交，可以 git stash 先暂存；或者 git commit 提交后，在新分支 `git reset --hard HEAD^` 丢弃该提交记录。
+
+## 依据其他分支创建新分支
 
 ```bash
-git diff HEAD --name-only | grep -E "*/demo/*" | xargs git stash push -m "stash demo files" --
+git switch -c <新分支名> <来源分支名>
 ```
-或：
+或者
 ```bash
-git status --porcelain | cut -d" " -f3- | grep -E "*/demo/*" | xargs git stash push -m "stash demo files" --
+git checkout -b <new-branch> <existing-branch>
 ```
 
-## 输出未被跟踪的文件名
+如创建一个 bug 分支依据远程最新 develop 分支：
 ```bash
-lx@lx MINGW64 /d/Documents/git_test (fix_B)
-$ git status -s
-AM git.md
- M test01.txt
-?? .gitignore
-?? 0001-commit-B.patch
-?? 0001-fix-B.patch
-?? 0001-update-fix_B.patch
-?? 0002-commit-C.patch
-?? 0002-update-fix_B.patch
-?? 1.patch
-?? 2.txt
-
-lx@lx MINGW64 /d/Documents/git_test (fix_B)
-$ git status -s |  grep "??" | cut -d" " -f2
-.gitignore
-0001-commit-B.patch
-0001-fix-B.patch
-0001-update-fix_B.patch
-0002-commit-C.patch
-0002-update-fix_B.patch
-1.patch
-2.txt
+git fetch -p
+git checkout b fix_bug origin/develop
 ```
 
-## 恢复工作目录到最新提交
+## 显示已跟踪被修改的文件名  
+```bash  
+git diff HEAD --name-only  
+```  
+  
+## 筛选已跟踪被修改的文件  
+  
+```bash  
+git diff HEAD --name-only | grep -E "*/demo/*"  
+```  
+或：  
+```bash  
+git status --porcelain | cut -d" " -f3- | grep -E "*/demo/*"  
+```  
+  
+## 筛选已跟踪被修改的特定后缀文件  
+  
+```bash  
+git diff HEAD --name-only |  grep -E "\.(cpp|h)$"  
+```  
+或：  
+```bash  
+git status --porcelain | cut -d" " -f3- |  grep -E "\.(cpp|h)$"  
+```  
+  
+## git stash 过滤文件保存  
+  
+```bash  
+git diff HEAD --name-only | grep -E "*/demo/*" | xargs git stash push -m "stash demo files" --  
+```  
+或：  
+```bash  
+git status --porcelain | cut -d" " -f3- | grep -E "*/demo/*" | xargs git stash push -m "stash demo files" --  
+```  
+  
+## 输出未被跟踪的文件名  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test (fix_B)  
+$ git status -s  
+AM git.md  
+ M test01.txt  
+?? .gitignore  
+?? 0001-commit-B.patch  
+?? 0001-fix-B.patch  
+?? 0001-update-fix_B.patch  
+?? 0002-commit-C.patch  
+?? 0002-update-fix_B.patch  
+?? 1.patch  
+?? 2.txt  
+  
+lx@lx MINGW64 /d/Documents/git_test (fix_B)  
+$ git status -s |  grep "??" | cut -d" " -f2  
+.gitignore  
+0001-commit-B.patch  
+0001-fix-B.patch  
+0001-update-fix_B.patch  
+0002-commit-C.patch  
+0002-update-fix_B.patch  
+1.patch  
+2.txt  
+```  
+  
+## 恢复工作目录到最新提交  
+  
+### git stash  
+```bash  
+git stash push -m "message"  
+```  
+  
+如果有没有被跟踪的文件，希望一起存起来：  
+```bash  
+git stash push --all -m "message"  
+```  
+  
+### git checkout  
+恢复已跟踪的文件：  
+```bash  
+git checkout HEAD -- .  
+```  
+  
+再删除没有被跟踪的文件：  
+```bash  
+git clean -fd  
+```  
+  
+### git reset  
+  
+恢复已跟踪的文件：  
+```bash  
+git reset --hard HEAD  
+```  
+  
+再删除没有被跟踪的文件：  
+```bash  
+git clean -fd  
+```  
+或者：  
+```bash  
+$ git status --short | grep "??" | cut -d" " -f2 | xargs rm -rf  
+```  
+  
+### git restore  
+  
+恢复已跟踪的文件：  
+```bash  
+$ git restore --source=HEAD --staged --worktree .  
+```  
+  
+再删除没有被跟踪的文件：  
+```bash  
+git clean -fd  
+```  
+  
+## 有冲突时指定使用版本  
+  
+两个仓库中的一个分支都修改了文件 2.txt 的相同一行，但修改内容内容不同，一个仓库已经将修改推送到远程仓库，另一个仓库修改后提交到本地，然后 git pull 时提示有冲突：  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test03 (fix_B)  
+$ git pull  
+remote: Enumerating objects: 5, done.  
+remote: Counting objects: 100% (5/5), done.  
+remote: Compressing objects: 100% (1/1), done.  
+remote: Total 3 (delta 1), reused 3 (delta 1), pack-reused 0 (from 0)  
+Unpacking objects: 100% (3/3), 239 bytes | 9.00 KiB/s, done.  
+From https://github.com/lxwcd/git_test  
+   15f80f2..f54dd26  fix_B      -> origin/fix_B  
+Auto-merging 2.txt  
+CONFLICT (content): Merge conflict in 2.txt  
+Automatic merge failed; fix conflicts and then commit the result.  
+```  
+  
+查看当前工作目录的状态，可以看见有个文件处于冲突中，待解决：  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)  
+$ git status  
+On branch fix_B  
+Your branch and 'origin/fix_B' have diverged,  
+and have 1 and 1 different commits each, respectively.  
+  (use "git pull" if you want to integrate the remote branch with yours)  
+  
+You have unmerged paths.  
+  (fix conflicts and run "git commit")  
+  (use "git merge --abort" to abort the merge)  
+  
+Unmerged paths:  
+  (use "git add <file>..." to mark resolution)  
+        both modified:   2.txt  
+  
+no changes added to commit (use "git add" and/or "git commit -a")  
+  
+```  
+  
+查看冲突文件的内容：  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)  
+$ cat 2.txt  
+<<<<<<< HEAD  
+22  
+=======  
+222  
+>>>>>>> f54dd265ddebde6a06e2ea619a0588d2b1555945  
+```  
+  
+`<<<<<<< HEAD` 表示下方表示当前版本  
+`=======` 表示分隔符，下方内容为冲突版本的内容  
+`>>>>>>> f54dd265ddebde6a06e2ea619a0588d2b1555945` 表示冲突结束位置  
+  
+### 使用对方版本  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)  
+$ git checkout --theirs 2.txt  
+Updated 1 path from the index  
+  
+lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)  
+$ cat 2.txt  
+222  
+```  
+  
+### 使用本地版本  
+```bash  
+lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)  
+$ git checkout --ours 2.txt  
+Updated 1 path from the index  
+  
+lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)  
+$ cat 2.txt  
+22  
+```  
+  
+### 添加到暂存区  
+选择版本后，将这些文件添加到暂存区：  
+  
+```bash  
+git add <file-path>  
+```  
+  
+### 继续合并  
+如果你已经解决了所有文件的冲突，你可以继续完成合并操作：  
+  
+```bash  
+git commit -m "message"  
+```  
+  
+或者   
+```bash  
+git merge --continue  
+```  
+  
+## 合并 feature 分支合并到主干分支  
 
-### git stash
+- git fetch -p 更新远程仓库
+- 拉取远程仓库主分支到本地
 ```bash
-git stash push -m "message"
+git checkout -b dev origin/dev
 ```
-
-如果有没有被跟踪的文件，希望一起存起来：
+- git switch -c 复制当前分支到新分支进行合并操作
+如果当前分支工作目录不干净，可以 git stash 保持未提交的信息；
+或者 git commmit 提交，然后到新分支后 git reset --hard HEAD^ 撤销提交。
+- 查看 feature 分支和待合并的主分支的提交差异
 ```bash
-git stash push --all -m "message"
+git branch -u origin/dev
+git branch -vv
 ```
+- 如果 feature 分支仅自己使用，且只有超前主分支的记录，无落后记录，则可以用 git rebase 或者 git merge -ff 合并。
+- 如果 feature 分支仅自己使用，有超前主分支的记录，也有落后记录，则可以用 git rebase 尝试合并，如果有冲突则中途解决冲突。
+- 如果 feature 分支是自己和其他人合作开发的分支，比主分支有超前和落后的记录，则可以先用 git rebase 尝试合并，看是否有冲突。
+- 如果 feature 分支是别人合作开发的分支，比主分支有超前和落后的记录，则需要用 git merge 合并。
+  - 如果无冲突，可直接用 git rebase 合并。  
+  - 如果有冲突，冲突是自己的提交记录，也可以修改冲突记录，然后继续用 git rebase 合并。  
+  - 如果有冲突，但冲突是别人的提交记录，则然对方进行合并解决冲突，或者自己解决冲突。
+    根据实际需要，用 git rebase，解决冲突会修改其他人的提交记录，但最终显示 Author 仍为对方或者可以改为自己。
+    或者用 git merge 等其他方式合并。
 
-### git checkout
-恢复已跟踪的文件：
+## 提 Pull Request 策略
+
+### 更新最新代码
+提 PR 前更新远程仓库代码，依据远程仓库主分支的最新代码在本地新建 feature 分支。
+
+### 冲突文件先提 PR 尽快合并
+对于很容易发生的修改，如多语言，工程文件等，可以在提 PR 前更新代码，查看其他人 PR，如果当前 Active PR 没有多语言的修改，则先将这些易冲突的文件先提 PR 尽快合并到主分支。
+
+### 提 PR 前本地合并 feature 分支到主分支
+本地代码修改完后，在提 PR 前，先更新远程仓库主分支的代码并拉取到本地，然后将当前分支合并到主分支，如果有冲突解决冲突。
+合并步骤见前面介绍。
+
+合并后分支只有超前远程主分支的记录，无落后记录。
+
+### 新建远程 feature 分支提 PR
+本地合并以后，将本地 feature 分支推送到远程仓库且在远程仓库新建 featrue 分支：
 ```bash
-git checkout HEAD -- .
+git push -u origin HEAD:feature
 ```
 
-再删除没有被跟踪的文件：
-```bash
-git clean -fd
-```
-
-### git reset
-
-恢复已跟踪的文件：
-```bash
-git reset --hard HEAD
-```
-
-再删除没有被跟踪的文件：
-```bash
-git clean -fd
-```
-或者：
-```bash
-$ git status --short | grep "??" | cut -d" " -f2 | xargs rm -rf
-```
-
-### git restore
-
-恢复已跟踪的文件：
-```bash
-$ git restore --source=HEAD --staged --worktree .
-```
-
-再删除没有被跟踪的文件：
-```bash
-git clean -fd
-```
-
-## 有冲突时指定使用版本
-
-两个仓库中的一个分支都修改了文件 2.txt 的相同一行，但修改内容内容不同，一个仓库已经将修改推送到远程仓库，另一个仓库修改后提交到本地，然后 git pull 时提示有冲突：
-```bash
-lx@lx MINGW64 /d/Documents/git_test03 (fix_B)
-$ git pull
-remote: Enumerating objects: 5, done.
-remote: Counting objects: 100% (5/5), done.
-remote: Compressing objects: 100% (1/1), done.
-remote: Total 3 (delta 1), reused 3 (delta 1), pack-reused 0 (from 0)
-Unpacking objects: 100% (3/3), 239 bytes | 9.00 KiB/s, done.
-From https://github.com/lxwcd/git_test
-   15f80f2..f54dd26  fix_B      -> origin/fix_B
-Auto-merging 2.txt
-CONFLICT (content): Merge conflict in 2.txt
-Automatic merge failed; fix conflicts and then commit the result.
-```
-
-查看当前工作目录的状态，可以看见有个文件处于冲突中，待解决：
-```bash
-lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)
-$ git status
-On branch fix_B
-Your branch and 'origin/fix_B' have diverged,
-and have 1 and 1 different commits each, respectively.
-  (use "git pull" if you want to integrate the remote branch with yours)
-
-You have unmerged paths.
-  (fix conflicts and run "git commit")
-  (use "git merge --abort" to abort the merge)
-
-Unmerged paths:
-  (use "git add <file>..." to mark resolution)
-        both modified:   2.txt
-
-no changes added to commit (use "git add" and/or "git commit -a")
-
-```
-
-查看冲突文件的内容：
-```bash
-lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)
-$ cat 2.txt
-<<<<<<< HEAD
-22
-=======
-222
->>>>>>> f54dd265ddebde6a06e2ea619a0588d2b1555945
-```
-
-`<<<<<<< HEAD` 表示下方表示当前版本
-`=======` 表示分隔符，下方内容为冲突版本的内容
-`>>>>>>> f54dd265ddebde6a06e2ea619a0588d2b1555945` 表示冲突结束位置
-
-### 使用对方版本
-```bash
-lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)
-$ git checkout --theirs 2.txt
-Updated 1 path from the index
-
-lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)
-$ cat 2.txt
-222
-```
-
-### 使用本地版本
-```bash
-lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)
-$ git checkout --ours 2.txt
-Updated 1 path from the index
-
-lx@lx MINGW64 /d/Documents/git_test03 (fix_B|MERGING)
-$ cat 2.txt
-22
-```
-
-### 添加到暂存区
-选择版本后，将这些文件添加到暂存区：
-
-```bash
-git add <file-path>
-```
-
-### 继续合并
-如果你已经解决了所有文件的冲突，你可以继续完成合并操作：
-
-```bash
-git commit -m "message"
-```
-
-或者 
-```bash
-git merge --continue
-```
-
+### PR 通过后合并到远程仓库主分支策略
+PR 经过验证后真正合并到远程仓库时，可能远程仓库主分支又有了新的提交记录，这时可以在本地拉取远程仓库主分支，再将 feature 分支尝试合并到主分支，如 git rebase，如果没有冲突，则可以在远程仓库选择 git rebase 合并方案。
+如果有冲突。则本地进行合并，并解决冲突后，重新推送到远程仓库进行 PR。
